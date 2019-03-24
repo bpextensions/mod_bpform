@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form>
+
+    <field name="title" type="text" required="true"
+           label="MOD_BPFIELDS_FIELD_FIELDS_TITLE_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_TITLE_DESC" />
+
+    <field name="name" type="text" required="true" filter="WORD"
+           label="MOD_BPFIELDS_FIELD_FIELDS_NAME_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_NAME_DESC" />
+
+    <field name="type" type="list" required="true" default="text"
+           label="MOD_BPFIELDS_FIELD_FIELDS_TYPE_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_TYPE_DESC"
+           filter="WORD">
+        <option value="text">MOD_BPFIELDS_FIELD_FIELDS_TYPE_OPTION_TEXT</option>
+        <option value="email">MOD_BPFIELDS_FIELD_FIELDS_TYPE_OPTION_EMAIL</option>
+        <option value="textarea">MOD_BPFIELDS_FIELD_FIELDS_TYPE_OPTION_TEXTAREA</option>
+        <option value="checkbox">MOD_BPFIELDS_FIELD_FIELDS_TYPE_OPTION_CHECKBOX</option>
+    </field>
+
+    <field name="required" type="radio"
+           default="0" class="btn-group"
+           label="MOD_BPFIELDS_FIELD_FIELDS_REQUIRED_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_REQUIRED_DESC"
+           filter="INT">
+        <option value="0">JNO</option>
+        <option value="1">JYES</option>
+    </field>
+
+    <field name="checked" type="radio" filter="INT"
+           default="0" class="btn-group"
+           showon="type:checkbox"
+           label="MOD_BPFIELDS_FIELD_FIELDS_CHECKED_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_CHECKED_DESC"
+           >
+        <option value="0">JNO</option>
+        <option value="1">JYES</option>
+    </field>
+
+    <field name="hint" type="text" showon="type:email,text,textarea"
+           label="MOD_BPFIELDS_FIELD_FIELDS_HINT_LABEL"
+           description="MOD_BPFIELDS_FIELD_FIELDS_HINT_DESC"
+           hint="MOD_BPFIELDS_FIELD_FIELDS_HINT_HINT" />
+
+
+</form>

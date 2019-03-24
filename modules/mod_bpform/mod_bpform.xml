@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" version="3.4" client="site" method="upgrade">
+    <name>mod_bpform</name>
+    <author>${author.name}</author>
+    <creationDate>${build.date}</creationDate>
+    <copyright>Copyright (C) ${build.year} ${copyrights}. All rights reserved.</copyright>
+    <license>${license.name}, see ${license.url}</license>
+    <authorEmail>${author.email}</authorEmail>
+    <authorUrl>${author.url}</authorUrl>
+    <version>${build.version}</version>
+    <description>MOD_BPFORM_XML_DESCRIPTION</description>
+
+    <files>
+        <folder>forms</folder>
+        <folder>language</folder>
+        <folder>tmpl</folder>
+        <filename>helper.php</filename>
+        <filename module="mod_bpform">mod_bpform.php</filename>
+    </files>
+
+    <languages folder="language">
+        <language tag="pl-PL">pl-PL/pl-PL.mod_bpform.ini</language>
+        <language tag="pl-PL">pl-PL/pl-PL.mod_bpform.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_bpform.ini</language>
+        <language tag="en-GB">en-GB/en-GB.mod_bpform.sys.ini</language>
+    </languages>
+
+    <updateservers>
+        <server type="extension" priority="5" name="BP Form">
+            https://raw.githubusercontent.com/bestproject/mod_bpform/updates/update.xml
+        </server>
+    </updateservers>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic" addfieldpath="/administrator/components/com_contact/models/fields">
+                <field name="recipient" type="radio"
+                       default="contact" class="btn-group"
+                       label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_LABEL"
+                       description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_DESC"
+                       filter="WORD">
+                    <option value="contact">MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_OPTION_CONTACT</option>
+                    <option value="emails">MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_OPTION_EMAILS</option>
+                </field>
+                <field
+                        name="recipient_contact"
+                        type="modal_contact"
+                        select="true" new="true" edit="true" clear="true"
+                        showon="recipient:contact"
+                        label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_CONTACT_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_CONTACT_DESC"
+                />
+                <field
+                        name="recipient_emails"
+                        showon="recipient:emails"
+                        type="subform"
+                        label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
+                        multiple="true"
+                >
+                    <form>
+                        <field
+                                name="email" type="email"
+                                label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
+                        />
+                    </form>
+                </field>
+                <field
+                        name="client_subject" type="text" required="true"
+                        label="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_DESC"
+                        hint="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
+                <field
+                        name="admin_subject" type="text" required="true"
+                        label="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_DESC"
+                        hint="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
+                <field
+                        name="success_message" type="textarea" required="true" rows="3"
+                        label="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
+                        hint="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
+                <field
+                        name="intro" type="editor" rows="3" filter="safehtml"
+                        buttons="false"
+                        label="MOD_BPFIELDS_BASIC_FIELD_INTRO_LABEL"
+                        description="MOD_BPFIELDS_BASIC_FIELD_INTRO_DESC"/>
+            </fieldset>
+            <fieldset name="fields" label="MOD_BPFORM_FIELDSET_FIELDS_LABEL"
+                      description="MOD_BPFORM_FIELDSET_FIELDS_DESC">
+                <field name="show_labels" type="radio" filter="INT"
+                       default="1" class="btn-group"
+                       label="MOD_BPFIELDS_FIELD_SHOW_LABELS_LABEL"
+                       description="MOD_BPFIELDS_FIELD_SHOW_LABELS_DESC"
+                >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="fields" type="subform" required="true" min="1"
+                       formsource="modules/mod_bpform/forms/fields.xml" multiple="true"
+                       label="MOD_BPFORM_FIELD_FIELDS_LABEL"
+                       description="MOD_BPFORM_FIELD_FIELDS_DESC"
+                />
+            </fieldset>
+            <fieldset
+                    name="advanced">
+                <field
+                        name="layout"
+                        type="modulelayout"
+                        default="top"
+                        label="JFIELD_ALT_LAYOUT_LABEL"
+                        description="JFIELD_ALT_MODULE_LAYOUT_DESC">
+
+                </field>
+
+                <field
+                        name="moduleclass_sfx"
+                        type="textarea" rows="3"
+                        label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL"
+                        description="COM_MODULES_FIELD_MODULECLASS_SFX_DESC"/>
+
+                <field
+                        name="cache"
+                        type="list"
+                        default="1"
+                        label="COM_MODULES_FIELD_CACHING_LABEL"
+                        description="COM_MODULES_FIELD_CACHING_DESC">
+                    <option
+                            value="1">JGLOBAL_USE_GLOBAL
+                    </option>
+                    <option
+                            value="0">COM_MODULES_FIELD_VALUE_NOCACHING
+                    </option>
+                </field>
+
+                <field
+                        name="cache_time"
+                        type="text"
+                        default="900"
+                        label="COM_MODULES_FIELD_CACHE_TIME_LABEL"
+                        description="COM_MODULES_FIELD_CACHE_TIME_DESC"/>
+            </fieldset>
+        </fields>
+    </config>
+
+</extension>
