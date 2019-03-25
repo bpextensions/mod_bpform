@@ -36,14 +36,14 @@ abstract class ModBPFormHelper
     /**
      * Process form input.
      *
-     * @param Input $input Form input data.
+     * @param array $input_data Form input data array.
      * @param Registry $params Module parameters.
      *
      * @return bool
      *
      * @throws Exception
      */
-    public static function processForm(Input $input, Registry $params): bool
+    public static function processForm(array $input_data, Registry $params): bool
     {
 
         // Application instance
@@ -53,12 +53,12 @@ abstract class ModBPFormHelper
         $result = true;
 
         // There is nothing to process, exit method
-        if (!$input->count()) {
+        if ( empty($input_data) ) {
             return true;
         }
 
         // Prepare data table
-        $data = static::prepareAndValidateData($input, $params);
+        $data = static::prepareAndValidateData($input_data, $params);
 
         // Check if every field that is required was filled
         if (in_array(false, $data, true)) {
@@ -87,6 +87,13 @@ abstract class ModBPFormHelper
         // Admin message subject
         $subject = $params->get('admin_subject');
 
+        // Look for client email and set a reply to field on the admin email
+        $client_email = static::getClientEmail($data, $params);
+        $reply_to = '';
+        if( !empty($client_email) ) {
+            $reply_to = $client_email;
+        }
+
         // If user did not provided e-mail addresses and debug is enabled
         if (empty($recipients) and $app->get('debug', 0)) {
             $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_NO_ADMIN_RECIPIENTS'), 'error');
@@ -98,17 +105,23 @@ abstract class ModBPFormHelper
             $result = false;
 
             // If we failed to send email
-        } elseif (!self::sendEmail($table, $subject, $recipients)) {
+        } elseif (!self::sendEmail($table, $subject, $recipients, $reply_to)) {
             $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
         }
 
 
         // Send email to client if there is an email address in form
-        $client_email = static::getClientEmail($data, $params);
         if ($result and !empty($client_email)) {
             $body = self::prepareBody($params->get('intro', ''), $table);
-            if (!self::sendEmail($body, $params->get('client_subject', ''), [$client_email])) {
+
+            // Set reply too so user can answer the copy
+            $reply_to = '';
+            if( !empty($recipients) ) {
+                $reply_to = current($recipients);
+            }
+
+            if (!self::sendEmail($body, $params->get('client_subject', ''), [$client_email], $reply_to)) {
                 $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
                 $result = false;
             }
@@ -125,21 +138,18 @@ abstract class ModBPFormHelper
     /**
      * Convert input to array and validate data.
      *
-     * @param Input $input Input object.
+     * @param array $input_data Input data array.
      * @param Registry $params Module parameters.
      *
      * @return array
      *
      * @throws Exception
      */
-    protected static function prepareAndValidateData(Input $input, Registry $params): array
+    protected static function prepareAndValidateData(array $input_data, Registry $params): array
     {
 
         // Applicatoin
         $app = Factory::getApplication();
-
-        // Convert to array
-        $input_data = $input->getArray();
 
         // Validate each field input
         $fields = static::getFields($params);
@@ -245,10 +255,11 @@ abstract class ModBPFormHelper
      * @param string $body E-mail body.
      * @param string $subject E-mail subject.
      * @param array $recipient Array of E-mail addresses.
+     * @param string $reply_to Reply-to e-mail address
      *
      * @return bool
      */
-    protected static function sendEmail(string $body, string $subject, array $recipients): bool
+    protected static function sendEmail(string $body, string $subject, array $recipients, string $reply_to= ''): bool
     {
 
         // E-mail class instance
@@ -257,6 +268,11 @@ abstract class ModBPFormHelper
         // Add recipients
         foreach ($recipients as $recipient) {
             $mail->addRecipient($recipient);
+        }
+
+        // Add reply to if exists
+        if( !empty($reply_to) ) {
+            $mail->addReplyTo($reply_to);
         }
 
         // Set body

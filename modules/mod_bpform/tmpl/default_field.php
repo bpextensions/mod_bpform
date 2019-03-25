@@ -48,7 +48,8 @@ if( isset($instance) and isset($element) ) {
     if( !$show_labels and !in_array($field->type, ['checkbox']) ) {
         $element->addAttribute('labelclass', 'sr-only');
     }
-    $element->addAttribute('name', $field->name);
+    $element->addAttribute('name', $formPrefix.'['.$field->name.']');
+    $element->addAttribute('id', $formPrefix.'_'.$field->name);
     $element->addAttribute('label', $field->title);
     if( $field->required ) {
         $element->addAttribute('required', 'true');

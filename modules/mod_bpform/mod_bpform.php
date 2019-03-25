@@ -27,12 +27,13 @@ $show_labels = (bool)$params->get('show_labels', 1);
 $fields = (array)$params->get('fields', []);
 $input = Factory::getApplication()->input->post;
 $captchaEnabled = ModBPFormHelper::isCaptchaEnabled($params) !==false;
+$formPrefix = 'modbpform'.$module->id;
 
 // Form values set in previous rendering
-$values = $input->getArray();
+$values = $input->get($formPrefix, [], 'array');
 
 // Process form input
-if( ModBPFormHelper::processForm($input, $params) ) {
+if( ModBPFormHelper::processForm($values, $params) ) {
     $values = [];
 }
 

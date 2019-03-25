@@ -1,5 +1,6 @@
 <?php
 
+use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
 
@@ -14,10 +15,12 @@ defined('_JEXEC') or die;
  * @author      ${author.name}
  */
 
+$form = new Form($formPrefix);
+
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 
-    <form name="bpform-<?php echo $module->id ?>" class="form-vertical" method="post" href="<?php echo JUri::current() ?>">
+    <form name="<?php echo $formPrefix ?>" class="form-vertical" method="post" href="<?php echo JUri::current() ?>">
         <?php foreach( $fields as $field ): ?>
             <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout.'_field') ?>
         <?php endforeach ?>
