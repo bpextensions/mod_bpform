@@ -21,6 +21,11 @@ defined('_JEXEC') or die;
         <?php foreach( $fields as $field ): ?>
             <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout.'_field') ?>
         <?php endforeach ?>
+        <?php if( $captchaEnabled ): ?>
+        <div class="captcha">
+            <?php echo ModBPFormHelper::getCaptcha($params, $module) ?>
+        </div>
+        <?php endif ?>
         <div class="form-actions">
             <button class="btn btn-default" type="reset">
                 <?php echo Text::_('MOD_BPFORM_BUTTON_RESET_LABEL') ?>

@@ -26,6 +26,7 @@ $layout = $params->get('layout', 'default');
 $show_labels = (bool)$params->get('show_labels', 1);
 $fields = (array)$params->get('fields', []);
 $input = Factory::getApplication()->input->post;
+$captchaEnabled = ModBPFormHelper::isCaptchaEnabled($params) !==false;
 
 // Form values set in previous rendering
 $values = $input->getArray();
