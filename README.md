@@ -7,6 +7,11 @@ Simple Joomla! 3 contact form module.
     - E-mail
     - Textarea
     - Checkbox
+    - Checkboxes
+    - Radio
+    - Select
+    - HTML
+    - Heading
 - Send e-mail to selected list of e-mail addresses or a contact.
 - Available translations:
     - English
