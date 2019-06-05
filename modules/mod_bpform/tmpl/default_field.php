@@ -98,9 +98,6 @@ if( isset($instance) and isset($element) ) {
 
     $instance->setup($element, $value);
 
-//    if( $field->type==='radio' ) {
-//        var_dump($element, $value, $instance);die;
-//    }
     echo $instance->renderField();
 }
 
