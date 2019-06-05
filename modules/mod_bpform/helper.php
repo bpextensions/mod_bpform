@@ -438,7 +438,7 @@ abstract class ModBPFormHelper
         $selected_attribute = $field->type==='list' ? 'selected':'checked';
         foreach ($options as $option) {
             $selected = in_array($option->value, $value) ? ' '.$selected_attribute.'="'.$selected_attribute.'"':'';
-            $xml .= '<option value="' . $option->value . '"'.$selected.'>' . $option->title . '</option>';
+            $xml .= '<option value="' . htmlspecialchars($option->value) . '"'.$selected.'>' . $option->title . '</option>';
         }
 
         return $xml;
