@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ @package     ${package}
+  ~ @subpackage  ${subpackage}
+  ~
+  ~ @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+  ~ @license     ${license.name}; see ${license.url}
+  -->
+
+<form>
+
+    <field name="title" type="text"
+           label="MOD_BPFORM_FIELD_OPTIONS_TITLE_LABEL"
+           description="MOD_BPFORM_FIELD_OPTIONS_TITLE_DESC" />
+
+    <field name="value" type="text"
+           label="MOD_BPFORM_FIELD_OPTIONS_VALUE_LABEL"
+           description="MOD_BPFORM_FIELD_OPTIONS_VALUE_DESC" />
+
+    <field name="selected" type="radio" filter="INT"
+           default="0" class="btn-group"
+           label="MOD_BPFORM_FIELD_OPTIONS_SELECTED_LABEL"
+           description="MOD_BPFORM_FIELD_OPTIONS_SELECTED_DESC"
+    >
+        <option value="0">JNO</option>
+        <option value="1">JYES</option>
+    </field>
+
+</form>

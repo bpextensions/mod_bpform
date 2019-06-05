@@ -36,70 +36,70 @@
             <fieldset name="basic" addfieldpath="/administrator/components/com_contact/models/fields">
                 <field name="recipient" type="radio"
                        default="contact" class="btn-group"
-                       label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_LABEL"
-                       description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_DESC"
+                       label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_LABEL"
+                       description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_DESC"
                        filter="WORD">
-                    <option value="contact">MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_OPTION_CONTACT</option>
-                    <option value="emails">MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_OPTION_EMAILS</option>
+                    <option value="contact">MOD_BPFORM_BASIC_FIELD_RECIPIENT_OPTION_CONTACT</option>
+                    <option value="emails">MOD_BPFORM_BASIC_FIELD_RECIPIENT_OPTION_EMAILS</option>
                 </field>
                 <field
                         name="recipient_contact"
                         type="modal_contact"
                         select="true" new="true" edit="true" clear="true"
                         showon="recipient:contact"
-                        label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_CONTACT_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_CONTACT_DESC"
+                        label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_CONTACT_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_CONTACT_DESC"
                 />
                 <field
                         name="recipient_emails"
                         showon="recipient:emails"
                         type="subform"
-                        label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
+                        label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
                         multiple="true"
                 >
                     <form>
                         <field
                                 name="email" type="email"
-                                label="MOD_BPFIELDS_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
+                                label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
                         />
                     </form>
                 </field>
                 <field
                         name="client_subject" type="text" required="true"
-                        label="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_DESC"
-                        hint="MOD_BPFIELDS_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
+                        label="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
                 <field
                         name="admin_subject" type="text" required="true"
-                        label="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_DESC"
-                        hint="MOD_BPFIELDS_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
+                        label="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
                 <field
                         name="success_message" type="textarea" required="true" rows="3"
-                        label="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
-                        hint="MOD_BPFIELDS_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
+                        label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
                 <field
                         name="intro" type="editor" rows="3" filter="safehtml"
                         buttons="false"
-                        label="MOD_BPFIELDS_BASIC_FIELD_INTRO_LABEL"
-                        description="MOD_BPFIELDS_BASIC_FIELD_INTRO_DESC"/>
+                        label="MOD_BPFORM_BASIC_FIELD_INTRO_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"/>
             </fieldset>
             <fieldset name="fields" label="MOD_BPFORM_FIELDSET_FIELDS_LABEL"
                       description="MOD_BPFORM_FIELDSET_FIELDS_DESC">
                 <field name="show_labels" type="radio" filter="INT"
                        default="1" class="btn-group"
-                       label="MOD_BPFIELDS_FIELD_SHOW_LABELS_LABEL"
-                       description="MOD_BPFIELDS_FIELD_SHOW_LABELS_DESC"
+                       label="MOD_BPFORM_FIELD_SHOW_LABELS_LABEL"
+                       description="MOD_BPFORM_FIELD_SHOW_LABELS_DESC"
                 >
                     <option value="0">JNO</option>
                     <option value="1">JYES</option>
                 </field>
                 <field name="captcha" type="radio" filter="INT"
                        default="0" class="btn-group"
-                       label="MOD_BPFIELDS_FIELD_CAPTCHA_LABEL"
-                       description="MOD_BPFIELDS_FIELD_CAPTCHA_DESC"
+                       label="MOD_BPFORM_FIELD_CAPTCHA_LABEL"
+                       description="MOD_BPFORM_FIELD_CAPTCHA_DESC"
                 >
                     <option value="0">JNO</option>
                     <option value="1">JYES</option>

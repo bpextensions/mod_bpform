@@ -53,7 +53,7 @@ abstract class ModBPFormHelper
         $result = true;
 
         // There is nothing to process, exit method
-        if ( empty($input_data) ) {
+        if (empty($input_data)) {
             return true;
         }
 
@@ -90,7 +90,7 @@ abstract class ModBPFormHelper
         // Look for client email and set a reply to field on the admin email
         $client_email = static::getClientEmail($data, $params);
         $reply_to = '';
-        if( !empty($client_email) ) {
+        if (!empty($client_email)) {
             $reply_to = $client_email;
         }
 
@@ -117,7 +117,7 @@ abstract class ModBPFormHelper
 
             // Set reply too so user can answer the copy
             $reply_to = '';
-            if( !empty($recipients) ) {
+            if (!empty($recipients)) {
                 $reply_to = current($recipients);
             }
 
@@ -185,8 +185,8 @@ abstract class ModBPFormHelper
         }
 
         // If captcha is enabled, validate it
-        if( static::isCaptchaEnabled($params)!==false ) {
-            if( !static::validateCaptcha($params) ) {
+        if (static::isCaptchaEnabled($params) !== false) {
+            if (!static::validateCaptcha($params)) {
                 $data[Text::_('MOD_BPFORM_FIELD_CAPTCHA_TITLE')] = false;
                 $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
             }
@@ -221,6 +221,57 @@ abstract class ModBPFormHelper
     }
 
     /**
+     * Check if captcha is enabled.
+     *
+     * @param Registry $params Module params.
+     *
+     * @return mixed    Returns string if captcha is enabled or false if not.
+     *
+     * @throws Exception
+     */
+    public static function isCaptchaEnabled(Registry $params)
+    {
+        $app = Factory::getApplication();
+        $plugin = $app->get('captcha');
+        if ($app->isClient('site')) {
+            $plugin = $app->getParams()->get('captcha', $plugin);
+        }
+
+        // Check if captcha is enabled
+        if ($plugin === 0 || $plugin === '0' || $plugin === '' || $plugin === null || !$params->get('captcha', 0)) {
+            return false;
+        }
+
+        return $plugin;
+    }
+
+    /**
+     * Validate captcha response.
+     *
+     * @return bool
+     *
+     * @throws Exception
+     * @var Regisry $params Module parameters.
+     *
+     */
+    public static function validateCaptcha(Registry $params): bool
+    {
+        PluginHelper::importPlugin('captcha', static::isCaptchaEnabled($params));
+        $dispatcher = JEventDispatcher::getInstance();
+        try {
+            $response = $dispatcher->trigger('onCheckAnswer');
+        } catch (Exception $e) {
+            $app = Factory::getApplication();
+            if ($app->get('debug')) {
+                $app->enqueueMessage($e->getMessage(), 'error');
+            }
+            $response = false;
+        }
+
+        return ($response === true) or ($response === [true]);
+    }
+
+    /**
      * Prepare data html table.
      *
      * @param array $data Form data.
@@ -250,43 +301,6 @@ abstract class ModBPFormHelper
     }
 
     /**
-     * Send email form.
-     *
-     * @param string $body E-mail body.
-     * @param string $subject E-mail subject.
-     * @param array $recipient Array of E-mail addresses.
-     * @param string $reply_to Reply-to e-mail address
-     *
-     * @return bool
-     */
-    protected static function sendEmail(string $body, string $subject, array $recipients, string $reply_to= ''): bool
-    {
-
-        // E-mail class instance
-        $mail = Factory::getMailer();
-
-        // Add recipients
-        foreach ($recipients as $recipient) {
-            $mail->addRecipient($recipient);
-        }
-
-        // Add reply to if exists
-        if( !empty($reply_to) ) {
-            $mail->addReplyTo($reply_to);
-        }
-
-        // Set body
-        $mail->setBody($body);
-        $mail->isHtml();
-
-        // Set subject
-        $mail->setSubject($subject);
-
-        // Send the email
-        return $mail->Send();
-    }
-
-    /**
      * Look for e-mail in form fields.
      *
      * @param array $data Form data.
@@ -312,6 +326,43 @@ abstract class ModBPFormHelper
         }
 
         return $email;
+    }
+
+    /**
+     * Send email form.
+     *
+     * @param string $body E-mail body.
+     * @param string $subject E-mail subject.
+     * @param array $recipient Array of E-mail addresses.
+     * @param string $reply_to Reply-to e-mail address
+     *
+     * @return bool
+     */
+    protected static function sendEmail(string $body, string $subject, array $recipients, string $reply_to = ''): bool
+    {
+
+        // E-mail class instance
+        $mail = Factory::getMailer();
+
+        // Add recipients
+        foreach ($recipients as $recipient) {
+            $mail->addRecipient($recipient);
+        }
+
+        // Add reply to if exists
+        if (!empty($reply_to)) {
+            $mail->addReplyTo($reply_to);
+        }
+
+        // Set body
+        $mail->setBody($body);
+        $mail->isHtml();
+
+        // Set subject
+        $mail->setSubject($subject);
+
+        // Send the email
+        return $mail->Send();
     }
 
     /**
@@ -345,7 +396,7 @@ abstract class ModBPFormHelper
 
         // Get captcha plugin
         $plugin = static::isCaptchaEnabled($params);
-        if( $plugin===false ) {
+        if ($plugin === false) {
             return '';
         }
 
@@ -366,54 +417,55 @@ abstract class ModBPFormHelper
     }
 
     /**
-     * Check if captcha is enabled.
+     * Prepare XML field options for checkboxes,radios and list type fields.
      *
-     * @param Registry $params  Module params.
+     * @param object $field Field object.
+     * @param array $value Field value.
      *
-     * @return mixed    Returns string if captcha is enabled or false if not.
-     *
-     * @throws Exception
+     * @return string
      */
-    public static function isCaptchaEnabled(Registry $params)
+    public static function prepareFieldXMLOptions(object $field, array $value = []): string
     {
-        $app = Factory::getApplication();
-        $plugin = $app->get('captcha');
-        if ($app->isClient('site')) {
-            $plugin = $app->getParams()->get('captcha', $plugin);
+        $xml = '';
+
+        // For list/select type fields, add a placeholder if exists
+        if (!empty($field->hint) and $field->type === 'list') {
+            $xml .= '<option value="">- ' . $field->hint . ' -</option>';
         }
 
-        // Check if captcha is enabled
-        if ($plugin === 0 || $plugin === '0' || $plugin === '' || $plugin === null || !$params->get('captcha',0)) {
-            return false;
+        // Render field options
+        $options = (array)$field->options;
+        $selected_attribute = $field->type==='list' ? 'selected':'checked';
+        foreach ($options as $option) {
+            $selected = in_array($option->value, $value) ? ' '.$selected_attribute.'="'.$selected_attribute.'"':'';
+            $xml .= '<option value="' . $option->value . '"'.$selected.'>' . $option->title . '</option>';
         }
 
-        return $plugin;
+        return $xml;
     }
 
     /**
-     * Validate captcha response.
+     * Get field value using field value set by user.
      *
-     * @var Regisry $params Module parameters.
+     * @param object $field Field object.
+     * @param array $default   Default field value (set by user)
      *
-     * @return bool
-     *
-     * @throws Exception
+     * @return array
      */
-    public static function validateCaptcha(Registry $params): bool
+    public static function getOptionsFieldValue(object $field, $default = []): array
     {
-        PluginHelper::importPlugin('captcha', static::isCaptchaEnabled($params));
-        $dispatcher = JEventDispatcher::getInstance();
-        try {
-            $response = $dispatcher->trigger('onCheckAnswer');
-        } catch( Exception $e) {
-            $app = Factory::getApplication();
-            if( $app->get('debug') ) {
-                $app->enqueueMessage($e->getMessage(), 'error');
+        $value = (array)$default;
+        $value = array_filter($value);
+        if (empty($value)) {
+            $options = (array)$field->options;
+            foreach ($options as $option) {
+                if( (bool)$option->selected ) {
+                    $value[] = $option->value;
+                }
             }
-            $response = false;
         }
 
-        return ($response === true) or ($response===[true]);
+        return $value;
     }
 
 }

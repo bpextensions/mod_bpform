@@ -35,7 +35,9 @@ defined('_JEXEC') or die;
 <div class="container">
     <table class="data-table">
         <tbody>
-        <?php foreach ($data as $title=>$value): ?>
+        <?php foreach ($data as $title=>$value):
+        $value = is_array($value) ? implode('<br>', $value) : $value;
+        ?>
             <tr>
                 <th>
                     <?php echo $title ?>
