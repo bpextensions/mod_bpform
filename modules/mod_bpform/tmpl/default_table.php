@@ -13,7 +13,7 @@ defined('_JEXEC') or die;
 ?>
 <style>
     .container {
-        max-width:600px;
+        width: 100%;
         text-align:center;
     }
     .data-table {
@@ -26,7 +26,9 @@ defined('_JEXEC') or die;
         padding:15px 20px;text-align:left;
     }
     .data-table th {
-        color:black;font-weight:400;
+        color: black;
+        font-weight: 400;
+        max-width: 33%;
     }
     .data-table td {
         color:#555;font-weight:400
@@ -35,16 +37,24 @@ defined('_JEXEC') or die;
 <div class="container">
     <table class="data-table">
         <tbody>
-        <?php foreach ($data as $title=>$value):
-        $value = is_array($value) ? implode('<br>', $value) : $value;
-        ?>
+        <?php foreach ($data as $name => $data_record):
+            $value = $data_record->value;
+            $value = is_array($value) ? '<ul><li>' . implode('</li><li>', $value) . '</li></ul>' : $value;
+            $title = $data_record->title;
+            ?>
             <tr>
-                <th>
-                    <?php echo $title ?>
-                </th>
-                <td>
-                    <?php echo $value ?>
-                </td>
+                <?php if (empty($value)): ?>
+                    <th style="font-weight: bold;width:33%;" colspan="2">
+                        <?php echo $title ?>
+                    </th>
+                <?php else: ?>
+                    <th style="font-weight: bold;width:33%;">
+                        <?php echo $title ?>
+                    </th>
+                    <td>
+                        <?php echo $value ?>
+                    </td>
+                <?php endif ?>
             </tr>
         <?php endforeach ?>
         </tbody>

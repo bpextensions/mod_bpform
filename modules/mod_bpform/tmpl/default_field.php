@@ -20,7 +20,12 @@ defined('_JEXEC') or die;
 $value = key_exists($field->name, $values) ? $values[$field->name] : '';
 
 // Prepare text field
-$instance = FormHelper::loadFieldType($field->type);
+if ($field->type == 'heading') {
+    $instance = FormHelper::loadFieldType('hidden');
+} else {
+    $instance = FormHelper::loadFieldType($field->type);
+}
+
 if( $field->type ==='text' ){
     $element = new SimpleXMLElement('<field type="text" />');
     $element->addAttribute('hint', $field->hint);

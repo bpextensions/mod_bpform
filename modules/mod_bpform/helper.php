@@ -14,8 +14,6 @@ use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Mail\Mail;
 use Joomla\CMS\Plugin\PluginHelper;
-use Joomla\Event\Dispatcher;
-use Joomla\Input\Input;
 use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
@@ -159,6 +157,11 @@ abstract class ModBPFormHelper
         // Process each field
         foreach ($fields as $name => $field) {
 
+            $data_record = (object)[
+                'title' => $field->title,
+                'value' => $input_data[$name],
+            ];
+
             // If this field is required and i was not filled
             if ($field->required and (!key_exists($name, $input_data) or empty($input_data[$name]))) {
                 $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
@@ -167,7 +170,7 @@ abstract class ModBPFormHelper
 
             // This field was set, so map it to data array using field title
             if (key_exists($name, $input_data)) {
-                $data = array_merge($data, [$field->title => $input_data[$name]]);
+                $data = array_merge($data, [$name => $data_record]);
             }
 
             // This is a checkbox so change value
@@ -175,19 +178,21 @@ abstract class ModBPFormHelper
 
                 // If field was checked, change value to YES
                 if (key_exists($name, $input_data)) {
-                    $data[$field->title] = Text::_('JYES');
+                    $data_record->value = Text::_('JYES');
 
                     // Field wasn't check, chagne value to NO
                 } else {
-                    $data[$field->title] = Text::_('JNO');
+                    $data_record->value = Text::_('JNO');
                 }
+
+                $data[$name] = $data_record;
             }
         }
 
         // If captcha is enabled, validate it
         if (static::isCaptchaEnabled($params) !== false) {
             if (!static::validateCaptcha($params)) {
-                $data[Text::_('MOD_BPFORM_FIELD_CAPTCHA_TITLE')] = false;
+                $data['captcha'] = false;
                 $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
             }
         }
@@ -206,8 +211,8 @@ abstract class ModBPFormHelper
     {
 
         // If fields was not processed yet
+        $fields = [];
         if (is_null(static::$fields)) {
-            $fields = [];
 
             $fields_params = (array)$params->get('fields', []);
 
@@ -215,7 +220,6 @@ abstract class ModBPFormHelper
                 $fields = array_merge($fields, [$field->name => $field]);
             }
         }
-
 
         return $fields;
     }
@@ -251,7 +255,7 @@ abstract class ModBPFormHelper
      * @return bool
      *
      * @throws Exception
-     * @var Regisry $params Module parameters.
+     *@var Registry $params Module parameters.
      *
      */
     public static function validateCaptcha(Registry $params): bool
@@ -333,7 +337,7 @@ abstract class ModBPFormHelper
      *
      * @param string $body E-mail body.
      * @param string $subject E-mail subject.
-     * @param array $recipient Array of E-mail addresses.
+     * @param array $recipients Array of E-mail addresses.
      * @param string $reply_to Reply-to e-mail address
      *
      * @return bool
@@ -409,7 +413,7 @@ abstract class ModBPFormHelper
             $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
 
             return $captcha->display('captcha', 'mod_bpform_captcha_' . $module->id);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $app->enqueueMessage($e->getMessage(), 'error');
 
             return '';
@@ -438,7 +442,7 @@ abstract class ModBPFormHelper
         $selected_attribute = $field->type==='list' ? 'selected':'checked';
         foreach ($options as $option) {
             $selected = in_array($option->value, $value) ? ' '.$selected_attribute.'="'.$selected_attribute.'"':'';
-            $xml .= '<option value="' . htmlspecialchars($option->value) . '"'.$selected.'>' . htmlspecialchars($option->title) . '</option>';
+            $xml .= '<option value="' . htmlspecialchars($option->value) . '" ' . $selected . '>' . htmlspecialchars($option->title) . '</option>';
         }
 
         return $xml;
