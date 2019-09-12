@@ -322,8 +322,8 @@ abstract class ModBPFormHelper
             // Look for first e-mail type field in fields list
             if ($field->type == 'email') {
 
-                if (key_exists($field->title, $data) and !empty($data[$field->title]) and static::isValidEmail($data[$field->title])) {
-                    $email = $data[$field->title];
+                if (key_exists($field->name, $data) and !empty($data[$field->name]->value) and static::isValidEmail($data[$field->name]->value)) {
+                    $email = $data[$field->name]->value;
                     break;
                 }
             }
