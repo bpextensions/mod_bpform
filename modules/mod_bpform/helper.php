@@ -159,7 +159,7 @@ abstract class ModBPFormHelper
 
             $data_record = (object)[
                 'title' => $field->title,
-                'value' => $input_data[$name],
+                'value' => key_exists($name, $input_data) ? $input_data[$name] : '',
             ];
 
             // If this field is required and i was not filled
