@@ -25,12 +25,6 @@
         <language tag="en-GB">en-GB/en-GB.mod_bpform.sys.ini</language>
     </languages>
 
-    <updateservers>
-        <server type="extension" priority="5" name="BP Form">
-            https://raw.githubusercontent.com/bestproject/mod_bpform/updates/update.xml
-        </server>
-    </updateservers>
-
     <config>
         <fields name="params">
             <fieldset name="basic" addfieldpath="/administrator/components/com_contact/models/fields">
