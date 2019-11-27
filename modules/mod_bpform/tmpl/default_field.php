@@ -40,16 +40,16 @@ if( $field->type ==='text' ){
     $element = new SimpleXMLElement('<field type="calendar" />');
     $element->addAttribute('hint', $field->hint);
 
-    $format = '%Y-%m-%d';
+    if (empty($field->calendarformat)) {
+        $field->calendarformat = '%Y-%m-%d';
+    }
     if ($field->calendarhours) {
-        $format .= ' %H:%M';
+        $field->calendarformat .= ' %H:%M';
         $element->addAttribute('showtime', 'true');
         $element->addAttribute('timeformat', $field->calendarhours);
     }
-    $element->addAttribute('format', $format);
+    $element->addAttribute('format', $field->calendarformat);
     $element->addAttribute('singleheader', 'true');
-    $element->addAttribute('minyear', '0');
-    $element->addAttribute('maxyear', '1');
 
 // Prepare tel field
 } elseif( $field->type ==='tel' ){

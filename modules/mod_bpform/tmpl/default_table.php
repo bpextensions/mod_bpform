@@ -18,7 +18,8 @@ defined('_JEXEC') or die;
     }
     .data-table {
         border:1px solid gray; border-collapse: collapse;
-        font-size:15px;font-family:Arial,Helvetica,Sans;
+        font-size: 15px;
+        font-family: Arial, Helvetica, sans-serif;
         width:100%;
     }
     .data-table th,td {
