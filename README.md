@@ -4,7 +4,9 @@ Simple Joomla! 3 contact form module.
 # Features
 - Manage form fields:
     - Text
+    - Phone
     - E-mail
+    - Calendar
     - Textarea
     - Checkbox
     - Checkboxes
@@ -12,6 +14,7 @@ Simple Joomla! 3 contact form module.
     - Select
     - HTML
     - Heading
+    
 - Send e-mail to selected list of e-mail addresses or a contact.
 - Available translations:
     - English
@@ -30,3 +33,6 @@ Here are instructions how to build installation package from scratch.
 
 ### v1.0.0
 - Initial release.
+
+### v1.0.4
+- Adding Calendar type field

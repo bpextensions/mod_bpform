@@ -16,6 +16,7 @@
         <option value="text">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_TEXT</option>
         <option value="tel">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_TEL</option>
         <option value="email">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_EMAIL</option>
+        <option value="calendar">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_CALENDAR</option>
         <option value="textarea">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_TEXTAREA</option>
         <option value="checkbox">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_CHECKBOX</option>
         <option value="checkboxes">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_CHECKBOXES</option>
@@ -44,6 +45,22 @@
         <option value="1">JYES</option>
     </field>
 
+    <field name="calendarhours" type="radio" filter="INT"
+           default="0" class="btn-group"
+           showon="type:calendar"
+           label="MOD_BPFORM_FIELD_FIELDS_CALENDARHOURS_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_CALENDARHOURS_DESC"
+    >
+        <option value="0">JNO</option>
+        <option value="12">MOD_BPFORM_FIELD_FIELDS_CALENDARHOURS_OPTION_12</option>
+        <option value="24">MOD_BPFORM_FIELD_FIELDS_CALENDARHOURS_OPTION_24</option>
+    </field>
+
+    <field name="calendarformat" type="text"
+           showon="type:calendar"
+           label="MOD_BPFORM_FIELD_FIELDS_CALENDARFORMAT_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_CALENDARFORMAT_DESC"/>
+
     <field name="options" type="subform" min="1" multiple="true"
            showon="type:checkboxes,radio,list" layout="joomla.form.field.subform.repeatable-table"
            formsource="modules/mod_bpform/forms/options.xml"
@@ -51,7 +68,7 @@
            description="MOD_BPFORM_FIELD_FIELDS_OPTIONS_DESC"
     />
 
-    <field name="hint" type="text" showon="type:email,text,textarea,tel,list"
+    <field name="hint" type="text" showon="type:email,text,textarea,tel,list,calendar"
            label="MOD_BPFORM_FIELD_FIELDS_HINT_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_HINT_DESC"
            hint="MOD_BPFORM_FIELD_FIELDS_HINT_HINT" />
