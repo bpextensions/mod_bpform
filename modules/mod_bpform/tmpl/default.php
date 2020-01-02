@@ -25,9 +25,9 @@ $form = new Form($formPrefix);
             <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout.'_field') ?>
         <?php endforeach ?>
         <?php if( $captchaEnabled ): ?>
-        <div class="captcha">
-            <?php echo ModBPFormHelper::getCaptcha($params, $module) ?>
-        </div>
+            <div class="captcha">
+                <?php echo $helper->getCaptcha() ?>
+            </div>
         <?php endif ?>
         <div class="form-actions">
             <button class="btn btn-default" type="reset">

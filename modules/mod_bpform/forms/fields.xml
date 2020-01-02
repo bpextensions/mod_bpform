@@ -22,12 +22,13 @@
         <option value="checkboxes">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_CHECKBOXES</option>
         <option value="radio">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_RADIO</option>
         <option value="list">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_LIST</option>
+        <option value="recipient">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_RECIPIENT</option>
         <option value="html">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HTML</option>
         <option value="heading">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HEADING</option>
     </field>
 
     <field name="required" type="radio"
-           default="0" class="btn-group" showon="type!:html,heading"
+           default="0" class="btn-group" showon="type!:html,heading,recipient"
            label="MOD_BPFORM_FIELD_FIELDS_REQUIRED_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_REQUIRED_DESC"
            filter="INT">
@@ -68,10 +69,10 @@
            description="MOD_BPFORM_FIELD_FIELDS_OPTIONS_DESC"
     />
 
-    <field name="hint" type="text" showon="type:email,text,textarea,tel,list,calendar"
+    <field name="hint" type="text" showon="type:email,text,textarea,tel,list,recipient,calendar"
            label="MOD_BPFORM_FIELD_FIELDS_HINT_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_HINT_DESC"
-           hint="MOD_BPFORM_FIELD_FIELDS_HINT_HINT" />
+           hint="MOD_BPFORM_FIELD_FIELDS_HINT_HINT"/>
 
     <field name="html" type="editor"
            showon="type:html" filter="raw"

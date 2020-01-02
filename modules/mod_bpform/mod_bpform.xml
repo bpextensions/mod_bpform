@@ -27,7 +27,10 @@
 
     <config>
         <fields name="params">
-            <fieldset name="basic" addfieldpath="/administrator/components/com_contact/models/fields">
+            <fieldset name="basic"
+                      addfieldpath="/administrator/components/com_contact/models/fields"
+                      addrulepath="/modules/mod_bpform/rules"
+            >
                 <field name="recipient" type="radio"
                        default="contact" class="btn-group"
                        label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_LABEL"
@@ -51,26 +54,35 @@
                         label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
                         multiple="true"
+                        min="0"
+                        validate="recipients"
                 >
                     <form>
                         <field
-                                name="email" type="email"
+                                name="name" type="text" required="true"
+                                label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_NAME_LABEL"
+                                description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_NAME_DESC"
+                        />
+                        <field
+                                name="email" type="email" required="true"
                                 label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
+                                description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_DESC"
+                                validate="email"
                         />
                     </form>
                 </field>
                 <field
-                        name="client_subject" type="text" required="true"
+                        name="client_subject" type="text"
                         label="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
                         hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
                 <field
-                        name="admin_subject" type="text" required="true"
+                        name="admin_subject" type="text"
                         label="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_DESC"
                         hint="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
                 <field
-                        name="success_message" type="textarea" required="true" rows="3"
+                        name="success_message" type="textarea" rows="3"
                         label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
                         hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
@@ -81,7 +93,8 @@
                         description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"/>
             </fieldset>
             <fieldset name="fields" label="MOD_BPFORM_FIELDSET_FIELDS_LABEL"
-                      description="MOD_BPFORM_FIELDSET_FIELDS_DESC">
+                      description="MOD_BPFORM_FIELDSET_FIELDS_DESC"
+                      addrulepath="/modules/mod_bpform/rules">
                 <field name="show_labels" type="radio" filter="INT"
                        default="1" class="btn-group"
                        label="MOD_BPFORM_FIELD_SHOW_LABELS_LABEL"
@@ -102,6 +115,7 @@
                        formsource="modules/mod_bpform/forms/fields.xml" multiple="true"
                        label="MOD_BPFORM_FIELD_FIELDS_LABEL"
                        description="MOD_BPFORM_FIELD_FIELDS_DESC"
+                       validate="fields"
                 />
             </fieldset>
             <fieldset
