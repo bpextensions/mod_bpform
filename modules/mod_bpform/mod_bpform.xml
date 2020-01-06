@@ -13,6 +13,7 @@
     <files>
         <folder>forms</folder>
         <folder>language</folder>
+        <folder>rules</folder>
         <folder>tmpl</folder>
         <filename>helper.php</filename>
         <filename module="mod_bpform">mod_bpform.php</filename>
