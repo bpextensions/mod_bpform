@@ -13,6 +13,7 @@ use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormRule;
 use Joomla\CMS\Language\Text;
 use Joomla\Registry\Registry;
+use Joomla\Utilities\ArrayHelper;
 
 final class JFormRuleFields extends FormRule
 {
@@ -64,7 +65,28 @@ final class JFormRuleFields extends FormRule
             );
         }
 
-        // TODO: If user selected Recipient field, make sure he added some Recipients e-mail addresses
+        // If user selected Recipient field, make sure he added some Recipients e-mail addresses
+        foreach ($fields_value as $field) {
+            if ($field->type === 'recipient') {
+                $emails = (array)$input->get('params.recipient_emails', []);
+                $emails = ArrayHelper::fromObject($emails);
+                $emails = array_column($emails, 'email');
+
+                require_once JPATH_SITE . '/modules/mod_bpform/helper.php';
+
+                $emails = array_filter($emails, function ($v) {
+                    return ModBPFormHelper::isValidEmail($v);
+                });
+
+                // Check if there are at least 2 valid emails to use with Recipient field
+                if (count($emails) < 2) {
+                    $element->addAttribute('message', 'MOD_BPFORM_RECIPIENT_EMAIL_INVALID');
+                    return false;
+                }
+
+                break;
+            }
+        }
 
         // If there are duplicates, return error.
         if (!empty($duplicates)) {
