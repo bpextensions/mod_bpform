@@ -20,11 +20,12 @@ $form = new Form($formPrefix);
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 
-    <form name="<?php echo $formPrefix ?>" class="form-vertical" method="post" href="<?php echo JUri::current() ?>">
-        <?php foreach( $fields as $field ): ?>
-            <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout.'_field') ?>
+    <form name="<?php echo $formPrefix ?>" class="form-vertical" method="post"
+          href="<?php echo JUri::current() ?>"<?php if ($helper->hasFilesUpload()): ?> enctype="multipart/form-data"<?php endif ?>>
+        <?php foreach ($fields as $field): ?>
+            <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout . '_field') ?>
         <?php endforeach ?>
-        <?php if( $captchaEnabled ): ?>
+        <?php if ($captchaEnabled): ?>
             <div class="captcha">
                 <?php echo $helper->getCaptcha() ?>
             </div>

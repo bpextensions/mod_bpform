@@ -40,7 +40,20 @@ defined('_JEXEC') or die;
         <tbody>
         <?php foreach ($data as $name => $data_record):
             $value = $data_record->value;
-            $value = is_array($value) ? '<ul><li>' . implode('</li><li>', $value) . '</li></ul>' : $value;
+
+            // Not a file
+            if ($data_record->type !== 'file') {
+                $value = is_array($value) ? '<ul><li>' . implode('</li><li>', $value) . '</li></ul>' : $value;
+
+                // File or files
+            } elseif ($data_record->type === 'file' and !empty($value)) {
+                $value = '<ul>';
+                foreach ($data_record->value as $file) {
+                    $value = '<li>' . $file['name'] . '</li>';
+                }
+                $value .= '</ul>';
+            }
+
             $title = $data_record->title;
             ?>
             <tr>

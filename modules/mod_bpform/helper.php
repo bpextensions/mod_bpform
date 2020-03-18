@@ -91,6 +91,9 @@ final class ModBPFormHelper
             return false;
         }
 
+        // Collect attachments from validate data
+        $attachments = $this->collectAttachments($data);
+
         // Create inquiry html table
         $table = $this->createTable($data);
 
@@ -121,11 +124,10 @@ final class ModBPFormHelper
             $result = false;
 
             // If we failed to send email
-        } elseif (!$this->sendEmail($table, $subject, $recipients, $reply_to)) {
+        } elseif (!$this->sendEmail($table, $subject, $recipients, $reply_to, $attachments)) {
             $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
         }
-
 
         // Send email to client if there is an email address in form
         if ($result and !empty($client_email)) {
@@ -140,7 +142,7 @@ final class ModBPFormHelper
             }
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
-            if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to)) {
+            if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to, $attachments)) {
                 $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
                 $result = false;
             }
@@ -178,35 +180,69 @@ final class ModBPFormHelper
         // Process each field
         foreach ($fields as $name => $field) {
 
-            $data_record = (object)[
-                'title' => $field->title,
-                'value' => key_exists($name, $input) ? $input[$name] : '',
-            ];
+            // Default field value is empty
+            $value = '';
 
-            // If this field is required and i was not filled
+            // Prepare and validate file input
+            if (key_exists($name, $input) and $field->type === 'file') {
+
+                // Prepare files input format
+                $files = $this->prepareFiles($input[$name]);
+
+                // Process and validate each file
+                $errors = $this->validateFiles($files, $field);
+
+                // If all files in this field are ok, set them
+                if (empty($errors)) {
+                    $value = $files;
+
+                    // There are errors, so display them and invalidate input
+                } else {
+                    foreach ($errors as $error) {
+                        $app->enqueueMessage(Text::sprintf($error, $field->title), 'warning');
+                    }
+                    $data = array_merge($data, [$name => false]);
+                }
+
+                // Prepare regular data value
+            } elseif (key_exists($name, $input)) {
+                $value = $input[$name];
+            }
+
+            // If data is not an invalid file, prepare its data record
+            if (!key_exists($name, $data)) {
+
+                $data_record = (object)[
+                    'title' => $field->title,
+                    'type' => $field->type,
+                    'value' => $value,
+                ];
+
+                // This field was set, so map it to data array using field name
+                if (key_exists($name, $input)) {
+                    $data = array_merge($data, [$name => $data_record]);
+                }
+
+                // This is a checkbox so change value
+                if (in_array($field->type, ['checkbox'])) {
+
+                    // If field was checked, change value to YES
+                    if (key_exists($name, $input)) {
+                        $data_record->value = Text::_('JYES');
+
+                        // Field wasn't check, change value to NO
+                    } else {
+                        $data_record->value = Text::_('JNO');
+                    }
+
+                    $data[$name] = $data_record;
+                }
+            }
+
+            // If this field is required and its blank
             if ($field->required and (!key_exists($name, $input) or empty($input[$name]))) {
                 $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
-            }
-
-            // This field was set, so map it to data array using field title
-            if (key_exists($name, $input)) {
-                $data = array_merge($data, [$name => $data_record]);
-            }
-
-            // This is a checkbox so change value
-            if (in_array($field->type, ['checkbox'])) {
-
-                // If field was checked, change value to YES
-                if (key_exists($name, $input)) {
-                    $data_record->value = Text::_('JYES');
-
-                    // Field wasn't check, chagne value to NO
-                } else {
-                    $data_record->value = Text::_('JNO');
-                }
-
-                $data[$name] = $data_record;
             }
         }
 
@@ -234,10 +270,10 @@ final class ModBPFormHelper
         $show_labels = (bool)$this->params->get('show_labels', 1);
 
         // If fields was not processed yet
-        $fields = [];
         if (is_null($this->fields) or $forceUpdate) {
 
             $fields_params = (array)$this->params->get('fields', []);
+            $this->fields = [];
 
             foreach ($fields_params as $field) {
 
@@ -281,6 +317,15 @@ final class ModBPFormHelper
                     case 'tel':
                         $field->element = new SimpleXMLElement('<field type="tel" />');
                         $field->element->addAttribute('hint', $field->hint);
+                        break;
+                    case 'file':
+                        $field->element = new SimpleXMLElement('<field type="file" />');
+                        if ($field->multiplefiles) {
+                            $field->element->addAttribute('multiple', 'true');
+                        }
+                        if (!empty($field->mimeaccept)) {
+                            $field->element->addAttribute('accept', $field->mimeaccept);
+                        }
                         break;
                     case 'list':
                         $field->value = $this->getOptionsFieldValue($field, $field->value);
@@ -342,11 +387,193 @@ final class ModBPFormHelper
                     }
                 }
 
-                $fields = array_merge($fields, [$field->name => $field]);
+                $this->fields = array_merge($this->fields, [$field->name => $field]);
             }
         }
 
-        return $fields;
+        return $this->fields;
+    }
+
+    /**
+     * Get field value using field value set by user.
+     *
+     * @param object $field Field object.
+     * @param array $default Default field value (set by user)
+     *
+     * @return array
+     */
+    public function getOptionsFieldValue(object $field, $default = []): array
+    {
+        $value = (array)$default;
+        $value = array_filter($value);
+        if (empty($value)) {
+            $options = (array)$field->options;
+            foreach ($options as $option) {
+                if ((bool)$option->selected) {
+                    $value[] = $option->value;
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Prepare XML field options for checkboxes,radios and list type fields.
+     *
+     * @param object $field Field object.
+     * @param array $value Field value.
+     *
+     * @return string
+     */
+    public function prepareFieldXMLOptions(object $field, array $value = []): string
+    {
+        $xml = '';
+
+        // For list/select type fields, add a placeholder if exists
+        if (!empty($field->hint) and $field->type === 'list') {
+            $xml .= '<option value="">- ' . $field->hint . ' -</option>';
+        }
+
+        // Render field options
+        $options = (array)$field->options;
+        $selected_attribute = $field->type === 'list' ? 'selected' : 'checked';
+        foreach ($options as $option) {
+            $selected = in_array($option->value, $value) ? ' ' . $selected_attribute . '="' . $selected_attribute . '"' : '';
+            $xml .= '<option value="' . htmlspecialchars($option->value) . '" ' . $selected . '>' . htmlspecialchars($option->title) . '</option>';
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Prepare XML field options for checkboxes,radios and list type fields.
+     *
+     * @param object $field Field object.
+     * @param array $value Field value.
+     *
+     * @return string
+     */
+    public function prepareRecipientXMLOptions(object $field, array $value = []): string
+    {
+        $xml = '';
+
+        // For list/select type fields, add a placeholder if exists
+        if (!empty($field->hint)) {
+            $xml .= '<option value="">- ' . $field->hint . ' -</option>';
+        }
+
+        // Render field options
+        $options = (array)$this->params->get('recipient_emails');
+
+        foreach ($options as $option) {
+            $selected = in_array($option->email, $value) ? ' selected="selected"' : '';
+            $xml .= '<option value="' . htmlspecialchars($option->email) . '" ' . $selected . '>' . htmlspecialchars($option->name) . '</option>';
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Prepare files array.
+     *
+     * @param array $input Array of input files.
+     *
+     * @return array
+     */
+    public function prepareFiles(array $input): array
+    {
+        $files = [];
+
+        if (!empty($input) and key_exists('tmp_name', $input)) {
+            $files[] = $input;
+        } elseif (!empty($input) and key_exists('tmp_name', $input[0])) {
+            $files = $input;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Validate file using is size
+     *
+     * @param array $input Files input array.
+     * @param stdClass $field Field object.
+     *
+     * @return array
+     */
+    protected function validateFiles($input, $field): array
+    {
+        $errors = [];
+
+        // Calculate files size
+        $totalsize = 0;
+        foreach ($input as $file) {
+            $totalsize += $file['size'];
+            if (!$this->validateFile($file, $field)) {
+                $errors[] = Text::sprintf('MOD_BPFORM_INPUT_INVALID_FILE_FORMAT_S', $file['name'], $field->title);
+            }
+        }
+
+        // If files size limit exceeded
+        if ($field->maxtotalfilesize < ($totalsize / 1024 / 1024)) {
+            $errors[] = Text::sprintf('MOD_BPFORM_INPUT_MAXTOTALFILESIZE_EXCEEDED_S', $field->title, $field->maxtotalfilesize);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate input file against field "accept" attribute.
+     *
+     * @param array $file Input file array.
+     * @param object $field Field object
+     *
+     * @return bool
+     */
+    protected function validateFile(array $file, object $field): bool
+    {
+        $result = true;
+
+        // Get types
+        $types = $this->getFileTypes($field->mimeaccept);
+
+        // Check file against each type
+        if (!empty($types)) {
+            $result = false;
+            $extension = '.' . strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            foreach ($types as $type) {
+
+                // Its an extension and its on the list
+                if (substr($type, 0, 1) === '.' and strtolower($type) === $extension) {
+                    $result = true;
+                    break;
+
+                    // Its a mime
+                } elseif (stripos($type, '/') !== false and fnmatch($type, $file['type'])) {
+                    $result = true;
+                    break;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get a list of file types and mimes.
+     *
+     * @param string $accept The content of accept attribute.
+     *
+     * @return array
+     */
+    protected function getFileTypes(string $accept): array
+    {
+        $parts = explode(',', $accept);
+        $parts = array_map("trim", $parts);
+
+        return array_filter($parts);
     }
 
     /**
@@ -415,6 +642,59 @@ final class ModBPFormHelper
     }
 
     /**
+     * Get recipients from input data and parameters.
+     *
+     * @param array $input Input data.
+     *
+     * @return array
+     */
+    protected function getRecipients(array $input): array
+    {
+        $recipients = [];
+
+        // If user selected contact as recipient
+        if ($this->params->get('recipient') === 'contact') {
+
+            // Load contact
+            JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
+            $contact = JTable::getInstance('Contact', 'ContactTable');
+            $contact_id = $this->params->get('recipient_contact');
+
+            if ($contact_id > 0 and $contact->load($contact_id) and !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
+                $recipients[] = $contact->email_to;
+            };
+
+            // User selected list of e-mail addresses as the recipients
+        } elseif ($this->params->get('recipient') == 'emails') {
+            $recipients = (array)$this->params->get('recipient_emails', []);
+            $recipients = array_column($recipients, 'email');
+
+            // If user selected recipient, limit recipients to only the selected one
+            if ($this->params->get('recipient') === 'emails') {
+
+                // Look for recipient field input
+                $fields = $this->getFields($input);
+                foreach ($fields as $field) {
+                    if ($field->type === 'recipient' and !empty($input[$field->name])) {
+
+                        // Leave only recipients that exists in input
+                        $recipients = array_intersect($recipients, [$input[$field->name]]);
+
+                        break;
+                    }
+                }
+
+            }
+
+        }
+
+        // Clear recipients from empty strings
+        $recipients = array_filter($recipients);
+
+        return $recipients;
+    }
+
+    /**
      * Check if this e-mail is valid.
      *
      * @param string $email E-mail address to validate.
@@ -459,10 +739,11 @@ final class ModBPFormHelper
      * @param string $subject E-mail subject.
      * @param array $recipients Array of E-mail addresses.
      * @param string $reply_to Reply-to e-mail address
+     * @param array $attachments A list of message attachments using PHP file array format.
      *
      * @return bool
      */
-    protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = ''): bool
+    protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = '', array $attachments = []): bool
     {
 
         // E-mail class instance
@@ -476,6 +757,11 @@ final class ModBPFormHelper
         // Add reply to if exists
         if (!empty($reply_to)) {
             $mail->addReplyTo($reply_to);
+        }
+
+        // If there are attachments to add
+        foreach ($attachments as $attachment) {
+            $mail->addAttachment($attachment['tmp_name'], $attachment['name']);
         }
 
         // Set body
@@ -500,6 +786,29 @@ final class ModBPFormHelper
     protected function prepareBody(string $intro, string $table): string
     {
         return $intro . $table;
+    }
+
+    /**
+     * Check if form build by this module has file type fields.
+     *
+     * @return bool
+     */
+    public function hasFilesUpload(): bool
+    {
+        $result = false;
+
+        // Get list of form fields
+        $fields = $this->getFields();
+
+        // Check if form has file type field
+        foreach ($fields as $field) {
+            if ($field->type === 'file') {
+                $result = true;
+                break;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -538,88 +847,24 @@ final class ModBPFormHelper
     }
 
     /**
-     * Prepare XML field options for checkboxes,radios and list type fields.
+     * Collect attachments from validated data.
      *
-     * @param object $field Field object.
-     * @param array $value Field value.
-     *
-     * @return string
-     */
-    public function prepareFieldXMLOptions(object $field, array $value = []): string
-    {
-        $xml = '';
-
-        // For list/select type fields, add a placeholder if exists
-        if (!empty($field->hint) and $field->type === 'list') {
-            $xml .= '<option value="">- ' . $field->hint . ' -</option>';
-        }
-
-        // Render field options
-        $options = (array)$field->options;
-        $selected_attribute = $field->type === 'list' ? 'selected' : 'checked';
-        foreach ($options as $option) {
-            $selected = in_array($option->value, $value) ? ' ' . $selected_attribute . '="' . $selected_attribute . '"' : '';
-            $xml .= '<option value="' . htmlspecialchars($option->value) . '" ' . $selected . '>' . htmlspecialchars($option->title) . '</option>';
-        }
-
-        return $xml;
-    }
-
-    /**
-     * Prepare XML field options for checkboxes,radios and list type fields.
-     *
-     * @param object $field Field object.
-     * @param array $value Field value.
-     *
-     * @return string
-     */
-    public function prepareRecipientXMLOptions(object $field, array $value = []): string
-    {
-        $xml = '';
-
-        // For list/select type fields, add a placeholder if exists
-        if (!empty($field->hint)) {
-            $xml .= '<option value="">- ' . $field->hint . ' -</option>';
-        }
-
-        // Render field options
-        $options = (array)$this->params->get('recipient_emails');
-
-        foreach ($options as $option) {
-            $selected = in_array($option->email, $value) ? ' selected="selected"' : '';
-            $xml .= '<option value="' . htmlspecialchars($option->email) . '" ' . $selected . '>' . htmlspecialchars($option->name) . '</option>';
-        }
-
-        return $xml;
-    }
-
-    /**
-     * Get field value using field value set by user.
-     *
-     * @param object $field Field object.
-     * @param array $default Default field value (set by user)
+     * @param array $data Validated data.
      *
      * @return array
      */
-    public function getOptionsFieldValue(object $field, $default = []): array
+    protected function collectAttachments(array $data): array
     {
-        $value = (array)$default;
-        $value = array_filter($value);
-        if (empty($value)) {
-            $options = (array)$field->options;
-            foreach ($options as $option) {
-                if ((bool)$option->selected) {
-                    $value[] = $option->value;
-                }
+        $attachments = [];
+
+        // Collect each attachment
+        foreach ($data as $name => $entry) {
+            if ($entry->type === 'file' and !empty($entry->value)) {
+                $attachments = array_merge($attachments, $entry->value);
             }
         }
 
-        return $value;
-    }
-
-    public function getAdministrationRecipients(Registry $params): array
-    {
-
+        return $attachments;
     }
 
     /**
@@ -632,57 +877,6 @@ final class ModBPFormHelper
         return $this->formPrefix;
     }
 
-    /**
-     * Get recipients from input data and parameters.
-     *
-     * @param array $input Input data.
-     *
-     * @return array
-     */
-    protected function getRecipients(array $input): array
-    {
-        $recipients = [];
 
-        // If user selected contact as recipient
-        if ($this->params->get('recipient') === 'contact') {
-
-            // Load contact
-            JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
-            $contact = JTable::getInstance('Contact', 'ContactTable');
-            $contact_id = $this->get('recipient_contact');
-
-            if ($contact_id > 0 and $contact->load($contact_id) and !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
-                $recipients[] = $contact->email_to;
-            };
-
-            // User selected list of e-mail addresses as the recipients
-        } elseif ($this->params->get('recipient') == 'emails') {
-            $recipients = (array)$this->params->get('recipient_emails', []);
-            $recipients = array_column($recipients, 'email');
-
-            // If user selected recipient, limit recipients to only the selected one
-            if ($this->params->get('recipient') === 'emails') {
-
-                // Look for recipient field input
-                $fields = $this->getFields($input);
-                foreach ($fields as $field) {
-                    if ($field->type === 'recipient' and !empty($input[$field->name])) {
-
-                        // Leave only recipients that exists in input
-                        $recipients = array_intersect($recipients, [$input[$field->name]]);
-
-                        break;
-                    }
-                }
-
-            }
-
-        }
-
-        // Clear recipients from empty strings
-        $recipients = array_filter($recipients);
-
-        return $recipients;
-    }
 
 }

@@ -22,6 +22,7 @@
         <option value="checkboxes">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_CHECKBOXES</option>
         <option value="radio">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_RADIO</option>
         <option value="list">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_LIST</option>
+        <option value="file">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_FILE</option>
         <option value="recipient">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_RECIPIENT</option>
         <option value="html">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HTML</option>
         <option value="heading">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HEADING</option>
@@ -36,12 +37,37 @@
         <option value="1">JYES</option>
     </field>
 
+    <field name="multiplefiles" type="radio"
+           default="0" class="btn-group" showon="type:file"
+           label="MOD_BPFORM_FIELD_FIELDS_MULTIPLEFILES_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_MULTIPLEFILES_DESC"
+           filter="INT">
+        <option value="0">JNO</option>
+        <option value="1">JYES</option>
+    </field>
+
+    <field name="maxtotalfilesize" type="text" filter="FLOAT"
+           default="5"
+           showon="type:file"
+           label="MOD_BPFORM_FIELD_FIELDS_MAXTOTALFILESIZE_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_MAXTOTALFILESIZE_DESC"
+           hint="MOD_BPFORM_FIELD_FIELDS_MAXTOTALFILESIZE_HINT"
+    />
+
+    <field name="mimeaccept" type="text"
+           default=""
+           showon="type:file"
+           label="MOD_BPFORM_FIELD_FIELDS_MIMEACCEPT_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_MIMEACCEPT_DESC"
+           hint="MOD_BPFORM_FIELD_FIELDS_MIMEACCEPT_HINT"
+    />
+
     <field name="checked" type="radio" filter="INT"
            default="0" class="btn-group"
            showon="type:checkbox"
            label="MOD_BPFORM_FIELD_FIELDS_CHECKED_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_CHECKED_DESC"
-           >
+    >
         <option value="0">JNO</option>
         <option value="1">JYES</option>
     </field>

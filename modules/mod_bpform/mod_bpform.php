@@ -34,7 +34,10 @@ $moduleclass_sfx = htmlspecialchars($params->get('moduleclass_sfx'));
 $layout = $params->get('layout', 'default');
 $show_labels = (bool)$params->get('show_labels', 1);
 $input = $app->input->post;
+$inputFiles = $app->input->files;
 $values = $input->get($formPrefix, [], 'array');
+$values = array_merge($values, $inputFiles->get($formPrefix, [], 'array'));
+
 $captchaEnabled = $helper->isCaptchaEnabled() !== false;
 $fields = $helper->getFields($values);
 
