@@ -49,7 +49,7 @@ defined('_JEXEC') or die;
             } elseif ($data_record->type === 'file' and !empty($value)) {
                 $value = '<ul>';
                 foreach ($data_record->value as $file) {
-                    $value = '<li>' . $file['name'] . '</li>';
+                    $value .= '<li>' . $file['name'] . '</li>';
                 }
                 $value .= '</ul>';
             }

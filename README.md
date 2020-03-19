@@ -12,10 +12,12 @@ Simple Joomla! 3 contact form module.
     - Checkboxes
     - Radio
     - Select
+    - File
+    - Recipient (Select recipient from a predefined list)
     - HTML
     - Heading
     
-- Send e-mail to selected list of e-mail addresses or a contact.
+- Send e-mail to selected list of e-mail addresses, contact or select the recipient from a predefined list.
 - Available translations:
     - English
     - Polish
@@ -31,8 +33,11 @@ Here are instructions how to build installation package from scratch.
 
 ## Changelog
 
-### v1.0.0
-- Initial release.
+### v1.1.5
+- Added file upload support.
 
 ### v1.0.4
-- Adding Calendar type field
+- Adding Calendar type field.
+
+### v1.0.0
+- Initial release.
