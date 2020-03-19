@@ -13,7 +13,7 @@ Simple Joomla! 3 contact form module.
     - Radio
     - Select
     - File
-    - Recipient (Select recipient from a predefined list)
+    - Recipient (select recipient from a predefined list)
     - HTML
     - Heading
     
