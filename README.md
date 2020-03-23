@@ -33,6 +33,9 @@ Here are instructions how to build installation package from scratch.
 
 ## Changelog
 
+### v1.1.6
+- Added updates server
+
 ### v1.1.5
 - Added file upload support.
 

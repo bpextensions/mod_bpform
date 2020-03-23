@@ -160,4 +160,9 @@
         </fields>
     </config>
 
+    <updateservers>
+        <server type="extension" priority="2" name="BP Form">https://free.updates.bpextensions.com/mod_bpform.xml
+        </server>
+    </updateservers>
+
 </extension>
