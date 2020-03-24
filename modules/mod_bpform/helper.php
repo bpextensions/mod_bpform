@@ -381,7 +381,13 @@ final class ModBPFormHelper
                     }
                     $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
                     $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
-                    $field->element->addAttribute('label', $field->title);
+
+                    $label_html_clear = isset($field->label_html) ? trim(strip_tags($field->label_html)) : '';
+                    if (in_array($field->type, ['checkbox']) and ($field->label_html_enabled ?? false) and !empty($label_html_clear)) {
+                        $field->element->addAttribute('label', $field->label_html);
+                    } else {
+                        $field->element->addAttribute('label', $field->title);
+                    }
                     if ($field->required) {
                         $field->element->addAttribute('required', 'true');
                     }

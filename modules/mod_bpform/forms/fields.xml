@@ -118,5 +118,18 @@
         <option value="h6">H6</option>
     </field>
 
+    <field name="label_html_enabled" type="radio"
+           default="0" class="btn-group" showon="type:checkbox"
+           label="MOD_BPFORM_FIELD_FIELDS_LABEL_HTML_ENABLED_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_LABEL_HTML_ENABLED_DESC"
+           filter="INT">
+        <option value="0">JNO</option>
+        <option value="1">JYES</option>
+    </field>
+
+    <field name="label_html" type="editor" filter="safehtml" hide="readmore,pagebreak"
+           showon="label_html_enabled:1"
+           label="MOD_BPFORM_FIELD_FIELDS_LABEL_HTML_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_LABEL_HTML_DESC"/>
 
 </form>
