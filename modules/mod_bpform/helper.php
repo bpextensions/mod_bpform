@@ -765,6 +765,8 @@ final class ModBPFormHelper
      * @param array $attachments A list of message attachments using PHP file array format.
      *
      * @return bool
+     *
+     * @throws Exception
      */
     protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = '', string $sender = '', array $attachments = []): bool
     {
@@ -779,7 +781,7 @@ final class ModBPFormHelper
 
         // Add sender if exists
         if (!empty($sender)) {
-            $mail->addReplyTo($sender);
+            $mail->setSender($sender);
         }
 
         // Add reply to if exists
@@ -800,7 +802,16 @@ final class ModBPFormHelper
         $mail->setSubject($subject);
 
         // Send the email
-        return $mail->Send();
+        try {
+            $result = $mail->Send();
+        } catch (Exception $e) {
+            $app = Factory::getApplication();
+            $app->enqueueMessage($e->getMessage(), 'danger');
+        }
+
+        $result = is_bool($result) ? $result : false;
+
+        return $result;
     }
 
     /**
