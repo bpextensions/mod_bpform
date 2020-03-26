@@ -108,9 +108,18 @@ final class ModBPFormHelper
 
         // Look for client email and set a reply to field on the admin email
         $client_email = $this->getClientEmail($input);
+        $visitor_sender_mode = $this->params->get('visitor_sender_mode', 1);
+        $admin_sender_mode = $this->params->get('admin_sender_mode', 1);
         $reply_to = '';
-        if (!empty($client_email)) {
+        $sender = '';
+
+        // If visitor sender mode is set to reply_to
+        if ($admin_sender_mode == 1 and !empty($client_email)) {
             $reply_to = $client_email;
+
+            // if visitor sender mode is set to Sender
+        } elseif ($admin_sender_mode == 0 and !empty($client_email)) {
+            $sender = $client_email;
         }
 
         // If user did not provided e-mail addresses and debug is enabled
@@ -124,7 +133,7 @@ final class ModBPFormHelper
             $result = false;
 
             // If we failed to send email
-        } elseif (!$this->sendEmail($table, $subject, $recipients, $reply_to, $attachments)) {
+        } elseif (!$this->sendEmail($table, $subject, $recipients, $reply_to, $sender, $attachments)) {
             $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
         }
@@ -137,12 +146,19 @@ final class ModBPFormHelper
 
             // Set reply too so user can answer the copy
             $reply_to = '';
-            if (!empty($recipients)) {
+            $sender = '';
+
+            // If visitor sender mode is set to reply_to
+            if ($visitor_sender_mode == 1 and !empty($recipients)) {
                 $reply_to = current($recipients);
+
+                // if visitor sender mode is set to Sender
+            } elseif ($visitor_sender_mode == 0 and !empty($recipients)) {
+                $sender = current($recipients);
             }
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
-            if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to, $attachments)) {
+            if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
                 $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
                 $result = false;
             }
@@ -744,12 +760,13 @@ final class ModBPFormHelper
      * @param string $body E-mail body.
      * @param string $subject E-mail subject.
      * @param array $recipients Array of E-mail addresses.
-     * @param string $reply_to Reply-to e-mail address
+     * @param string $reply_to Reply-to e-mail address.
+     * @param string $sender Set sender e-mail address.
      * @param array $attachments A list of message attachments using PHP file array format.
      *
      * @return bool
      */
-    protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = '', array $attachments = []): bool
+    protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = '', string $sender = '', array $attachments = []): bool
     {
 
         // E-mail class instance
@@ -758,6 +775,11 @@ final class ModBPFormHelper
         // Add recipients
         foreach ($recipients as $recipient) {
             $mail->addRecipient($recipient);
+        }
+
+        // Add sender if exists
+        if (!empty($sender)) {
+            $mail->addReplyTo($sender);
         }
 
         // Add reply to if exists

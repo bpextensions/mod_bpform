@@ -72,26 +72,25 @@
                         />
                     </form>
                 </field>
-                <field
-                        name="client_subject" type="text"
-                        label="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
-                        hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
-                <field
-                        name="admin_subject" type="text"
-                        label="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_DESC"
-                        hint="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
-                <field
-                        name="success_message" type="textarea" rows="3"
-                        label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
-                        hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
-                <field
-                        name="intro" type="editor" rows="3" filter="safehtml"
-                        buttons="false"
-                        label="MOD_BPFORM_BASIC_FIELD_INTRO_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"/>
+
+                <field name="admin_sender_mode" type="radio" filter="INT"
+                       default="1" class="btn-group"
+                       label="MOD_BPFORM_FIELD_ADMIN_SENDER_MODE_LABEL"
+                       description="MOD_BPFORM_FIELD_SENDER_MODE_DESC"
+                >
+                    <option value="1">MOD_BPFORM_FIELD_SENDER_MODE_REPLYTO</option>
+                    <option value="0">MOD_BPFORM_FIELD_SENDER_MODE_SENDER</option>
+                </field>
+
+                <field name="visitor_sender_mode" type="radio" filter="INT"
+                       default="1" class="btn-group"
+                       label="MOD_BPFORM_FIELD_VISITOR_SENDER_MODE_LABEL"
+                       description="MOD_BPFORM_FIELD_SENDER_MODE_DESC"
+                >
+                    <option value="1">MOD_BPFORM_FIELD_SENDER_MODE_REPLYTO</option>
+                    <option value="0">MOD_BPFORM_FIELD_SENDER_MODE_SENDER</option>
+                </field>
+
             </fieldset>
             <fieldset name="fields" label="MOD_BPFORM_FIELDSET_FIELDS_LABEL"
                       description="MOD_BPFORM_FIELDSET_FIELDS_DESC"
@@ -118,6 +117,43 @@
                        description="MOD_BPFORM_FIELD_FIELDS_DESC"
                        validate="fields"
                 />
+            </fieldset>
+            <fieldset name="message" label="MOD_BPFORM_FIELDSET_MESSAGE_LABEL"
+                      description="MOD_BPFORM_FIELDSET_MESSAGE_DESC">
+
+                <field
+                        name="message_visitor_note"
+                        type="spacer"
+                        label="MOD_BPFORM_MESSAGE_VISITOR_NOTE"
+                        class="muted"
+                />
+                <field
+                        name="success_message" type="textarea" rows="3"
+                        label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
+                <field
+                        name="client_subject" type="text"
+                        label="MOD_BPFORM_BASIC_FIELD_SUBJECT_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
+                <field
+                        name="intro" type="editor" rows="3" filter="safehtml" height="250"
+                        buttons="false"
+                        label="MOD_BPFORM_BASIC_FIELD_INTRO_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"/>
+                <field
+                        name="message_admin_note"
+                        type="spacer"
+                        label="MOD_BPFORM_MESSAGE_ADMIN_NOTE"
+                        class="muted"
+                />
+                <field
+                        name="admin_subject" type="text"
+                        label="MOD_BPFORM_BASIC_FIELD_SUBJECT_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_DESC"
+                        hint="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
+
             </fieldset>
             <fieldset
                     name="advanced">
