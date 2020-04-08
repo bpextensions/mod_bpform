@@ -523,6 +523,8 @@ final class ModBPFormHelper
      * @param stdClass $field Field object.
      *
      * @return array
+     *
+     * @since 1.2.0
      */
     protected function validateFiles($input, $field): array
     {
@@ -532,7 +534,7 @@ final class ModBPFormHelper
         $totalsize = 0;
         foreach ($input as $file) {
             $totalsize += $file['size'];
-            if (!$this->validateFile($file, $field)) {
+            if ((!empty($file['name']) or $field->required) and !$this->validateFile($file, $field)) {
                 $errors[] = Text::sprintf('MOD_BPFORM_INPUT_INVALID_FILE_FORMAT_S', $file['name'], $field->title);
             }
         }

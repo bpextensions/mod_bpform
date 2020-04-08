@@ -33,6 +33,14 @@ Here are instructions how to build installation package from scratch.
 
 ## Changelog
 
+### v1.2.1
+- Fix files uploads.
+- Fix translation of upload error messages.
+- Update PHP Requirements.
+
+### v1.2.0
+- Added files upload
+
 ### v1.1.6
 - Added updates server
 
