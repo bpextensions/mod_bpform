@@ -5,6 +5,7 @@
 !/modules/mod_bpform/**
 
 !/LICENSE
+!/.github
 !/README.md
 !/build.xml
 !/composer.json

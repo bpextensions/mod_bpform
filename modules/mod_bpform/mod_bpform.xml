@@ -32,6 +32,16 @@
                       addfieldpath="/administrator/components/com_contact/models/fields"
                       addrulepath="/modules/mod_bpform/rules"
             >
+                <field
+                        addfieldpath="/modules/mod_bpform/fields"
+                        name="donate"
+                        type="bpdonate"
+                        url="${donate.url}"
+                        intro_text="MOD_BPFORM_BASIC_FIELD_DONATE_INTRO_TEXT"
+                        button_text="MOD_BPFORM_BASIC_FIELD_DONATE_BUTTON_TEXT"
+                        label="MOD_BPFORM_BASIC_FIELD_DONATE_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_DONATE_DESC"
+                />
                 <field name="recipient" type="radio"
                        default="contact" class="btn-group"
                        label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_LABEL"
