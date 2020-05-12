@@ -79,9 +79,9 @@ class JFormFieldBPDonate extends FormField
         $result = parent::setup($element, $value, $group);
 
         if ($result === true) {
-            $this->url = $this->element['url'] ?? '#';
+            $this->url         = $this->element['url'] ?? '${donate.url}';
             $this->button_text = Text::_($this->element['button_text'] ?? 'BPEXTENSIONS_BUTTON_DONATE_TEXT');
-            $this->intro_text = Text::_($this->element['intro_text'] ?? 'BPEXTENSIONS_DONATE_INTRO_TEXT');
+            $this->intro_text  = Text::_($this->element['intro_text'] ?? 'BPEXTENSIONS_DONATE_INTRO_TEXT');
         }
 
         return $result;
