@@ -36,8 +36,6 @@
                         addfieldpath="/modules/mod_bpform/fields"
                         name="donate"
                         type="bpdonate"
-                        label="MOD_BPFORM_BASIC_FIELD_DONATE_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_DONATE_DESC"
                 />
                 <field name="recipient" type="radio"
                        default="contact" class="btn-group"
