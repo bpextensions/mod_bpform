@@ -12,6 +12,7 @@
 
     <files>
         <folder>forms</folder>
+        <folder>fields</folder>
         <folder>language</folder>
         <folder>rules</folder>
         <folder>tmpl</folder>
