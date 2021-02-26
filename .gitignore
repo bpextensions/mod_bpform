@@ -13,6 +13,7 @@
 !/.gitignore
 !/package.json
 !/package-lock.json
+!/webpack.config.js
 
 !PHP File Header.php
-!build.properties
+!build.properties.dist

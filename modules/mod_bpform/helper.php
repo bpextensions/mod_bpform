@@ -149,11 +149,11 @@ final class ModBPFormHelper
             $sender = '';
 
             // If visitor sender mode is set to reply_to
-            if ($visitor_sender_mode == 1 and !empty($recipients)) {
+            if ((int)$visitor_sender_mode === 1) {
                 $reply_to = current($recipients);
 
                 // if visitor sender mode is set to Sender
-            } elseif ($visitor_sender_mode == 0 and !empty($recipients)) {
+            } elseif ((int)$visitor_sender_mode === 0) {
                 $sender = current($recipients);
             }
 
@@ -221,29 +221,29 @@ final class ModBPFormHelper
                 }
 
                 // Prepare regular data value
-            } elseif (key_exists($name, $input)) {
+            } elseif (array_key_exists($name, $input)) {
                 $value = $input[$name];
             }
 
             // If data is not an invalid file, prepare its data record
-            if (!key_exists($name, $data)) {
+            if (!array_key_exists($name, $data)) {
 
                 $data_record = (object)[
                     'title' => $field->title,
-                    'type' => $field->type,
+                    'type'  => $field->type,
                     'value' => $value,
                 ];
 
                 // This field was set, so map it to data array using field name
-                if (key_exists($name, $input)) {
+                if (array_key_exists($name, $input)) {
                     $data = array_merge($data, [$name => $data_record]);
                 }
 
                 // This is a checkbox so change value
-                if (in_array($field->type, ['checkbox'])) {
+                if ($field->type === 'checkbox') {
 
                     // If field was checked, change value to YES
-                    if (key_exists($name, $input)) {
+                    if (array_key_exists($name, $input)) {
                         $data_record->value = Text::_('JYES');
 
                         // Field wasn't check, change value to NO
@@ -256,7 +256,7 @@ final class ModBPFormHelper
             }
 
             // If this field is required and its blank
-            if ($field->required and (!key_exists($name, $input) or empty($input[$name]))) {
+            if ($field->required && (!key_exists($name, $input) || empty($input[$name]))) {
                 $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
             }
@@ -294,7 +294,7 @@ final class ModBPFormHelper
             foreach ($fields_params as $field) {
 
                 // Default field value
-                $field->value = key_exists($field->name, $input) ? $input[$field->name] : '';
+                $field->value           = array_key_exists($field->name, $input) ? $input[$field->name] : '';
 
                 // Create field instance
                 if (in_array($field->type, ['heading', 'html'])) {
@@ -371,7 +371,7 @@ final class ModBPFormHelper
                     case 'checkboxes':
                         $xml = '<field type="checkboxes">';
                         $xml .= $this->prepareFieldXMLOptions($field, $this->getOptionsFieldValue($field, $field->value));
-                        $xml .= '</field>';
+                        $xml            .= '</field>';
                         $field->element = new SimpleXMLElement($xml);
                         break;
                     case 'textarea':
@@ -391,15 +391,15 @@ final class ModBPFormHelper
                 }
 
                 // Set last parameters
-                if (isset($field->instance) and isset($field->element)) {
-                    if (!$show_labels and !in_array($field->type, ['checkbox'])) {
+                if (isset($field->instance, $field->element)) {
+                    if (!$show_labels && $field->type !== 'checkbox') {
                         $field->element->addAttribute('labelclass', 'sr-only');
                     }
                     $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
                     $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
 
                     $label_html_clear = isset($field->label_html) ? trim(strip_tags($field->label_html)) : '';
-                    if (in_array($field->type, ['checkbox']) and ($field->label_html_enabled ?? false) and !empty($label_html_clear)) {
+                    if ($field->type === 'checkbox' && ($field->label_html_enabled ?? false) && !empty($label_html_clear)) {
                         $field->element->addAttribute('label', $field->label_html);
                     } else {
                         $field->element->addAttribute('label', $field->title);
@@ -461,8 +461,9 @@ final class ModBPFormHelper
         $options = (array)$field->options;
         $selected_attribute = $field->type === 'list' ? 'selected' : 'checked';
         foreach ($options as $option) {
-            $selected = in_array($option->value, $value) ? ' ' . $selected_attribute . '="' . $selected_attribute . '"' : '';
-            $xml .= '<option value="' . htmlspecialchars($option->value) . '" ' . $selected . '>' . htmlspecialchars($option->title) . '</option>';
+            $selected = in_array($option->value, $value,
+                false) ? ' ' . $selected_attribute . '="' . $selected_attribute . '"' : '';
+            $xml      .= '<option value="' . htmlspecialchars($option->value) . '" ' . $selected . '>' . htmlspecialchars($option->title) . '</option>';
         }
 
         return $xml;
@@ -489,8 +490,8 @@ final class ModBPFormHelper
         $options = (array)$this->params->get('recipient_emails');
 
         foreach ($options as $option) {
-            $selected = in_array($option->email, $value) ? ' selected="selected"' : '';
-            $xml .= '<option value="' . htmlspecialchars($option->email) . '" ' . $selected . '>' . htmlspecialchars($option->name) . '</option>';
+            $selected = in_array($option->email, $value, false) ? ' selected="selected"' : '';
+            $xml      .= '<option value="' . htmlspecialchars($option->email) . '" ' . $selected . '>' . htmlspecialchars($option->name) . '</option>';
         }
 
         return $xml;
@@ -507,9 +508,9 @@ final class ModBPFormHelper
     {
         $files = [];
 
-        if (!empty($input) and key_exists('tmp_name', $input)) {
+        if (!empty($input) && array_key_exists('tmp_name', $input)) {
             $files[] = $input;
-        } elseif (!empty($input) and key_exists('tmp_name', $input[0])) {
+        } elseif (!empty($input) && array_key_exists('tmp_name', $input[0])) {
             $files = $input;
         }
 
@@ -570,12 +571,14 @@ final class ModBPFormHelper
             foreach ($types as $type) {
 
                 // Its an extension and its on the list
-                if (substr($type, 0, 1) === '.' and strtolower($type) === $extension) {
+                if (strpos($type, '.') === 0 && strtolower($type) === $extension) {
                     $result = true;
                     break;
 
-                    // Its a mime
-                } elseif (stripos($type, '/') !== false and fnmatch($type, $file['type'])) {
+                }
+
+                // Its a mime
+                if (strpos($type, '/') !== false && fnmatch($type, $file['type'])) {
                     $result = true;
                     break;
                 }
@@ -603,9 +606,9 @@ final class ModBPFormHelper
     /**
      * Check if captcha is enabled.
      *
-     * @param Registry $params Module params.
+     * @param   Registry  $params  Module params.
      *
-     * @return mixed    Returns string if captcha is enabled or false if not.
+     * @return string|bool    Returns string if captcha is enabled or false if not.
      *
      * @throws Exception
      */
@@ -694,20 +697,15 @@ final class ModBPFormHelper
             $recipients = array_column($recipients, 'email');
 
             // If user selected recipient, limit recipients to only the selected one
-            if ($this->params->get('recipient') === 'emails') {
+            $fields = $this->getFields($input);
+            foreach ($fields as $field) {
+                if ($field->type === 'recipient' && !empty($input[$field->name])) {
 
-                // Look for recipient field input
-                $fields = $this->getFields($input);
-                foreach ($fields as $field) {
-                    if ($field->type === 'recipient' and !empty($input[$field->name])) {
+                    // Leave only recipients that exists in input
+                    $recipients = array_intersect($recipients, [$input[$field->name]]);
 
-                        // Leave only recipients that exists in input
-                        $recipients = array_intersect($recipients, [$input[$field->name]]);
-
-                        break;
-                    }
+                    break;
                 }
-
             }
 
         }
@@ -744,9 +742,10 @@ final class ModBPFormHelper
         foreach ($fields as $name => $field) {
 
             // Look for first e-mail type field in fields list
-            if ($field->type == 'email') {
+            if ($field->type === 'email') {
 
-                if (key_exists($field->name, $input) and !empty($input[$field->name]) and $this->isValidEmail($input[$field->name])) {
+                if (array_key_exists($field->name,
+                        $input) && !empty($input[$field->name]) && $this->isValidEmail($input[$field->name])) {
                     $email = $input[$field->name];
                     break;
                 }
@@ -804,6 +803,7 @@ final class ModBPFormHelper
         $mail->setSubject($subject);
 
         // Send the email
+        $result = false;
         try {
             $result = $mail->Send();
         } catch (Exception $e) {
@@ -917,7 +917,5 @@ final class ModBPFormHelper
     {
         return $this->formPrefix;
     }
-
-
 
 }

@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="BP Form" default="build:clean" basedir="." description="BP Form build task">
-    
-    <property file="./build.properties" />
-    
+
+    <property file="./build.properties"/>
+
     <php expression="date('F Y')" returnProperty="build.date"/>
     <php expression="date('Y')" returnProperty="build.year"/>
-    
+
+    <target name="test">
+        <echo msg="Test each extension before build"/>
+        <phingcall target="test:compatibility"/>
+        <phingcall target="test:mod_bpform"/>
+    </target>
+
+    <target name="test:compatibility">
+        <echo msg="Testing PHP 7.2 Compatibility"/>
+        <exec command="composer test:compatibility" checkreturn="true"/>
+    </target>
+
+    <target name="test:mod_bpform">
+        <echo msg="Testing mod_bpform"/>
+        <echo msg="No tests yet."/>
+    </target>
+
     <target name="build:mod_bpform">
-        <echo msg="Creating module directory" />
-        <mkdir dir="./.build/mod_bpform" />
-        
-        <echo msg="Building module installer" />
-        <copy todir="./.build/mod_bpform" >
+        <echo msg="Creating module directory"/>
+        <mkdir dir="./.build/mod_bpform"/>
+
+        <echo msg="Building module installer"/>
+        <copy todir="./.build/mod_bpform">
             <fileset dir="./modules/mod_bpform">
-                <include name="**/*" />
-                <exclude name=".dev/**" />
+                <include name="**/*"/>
+                <exclude name=".dev/**"/>
                 <exclude name=".dev/" />
             </fileset>
             <filterchain>
@@ -25,6 +41,7 @@
                     <token key="license.name" value="${license.name}" />
                     <token key="license.url" value="${license.url}" />
                     <token key="build.version" value="${build.version}" />
+                    <token key="build.release" value="${build.release}"/>
                     <token key="package" value="${package}" />
                     <token key="subpackage" value="${subpackage}" />
                     <token key="author.url" value="${author.url}" />
@@ -36,16 +53,18 @@
         </copy>
 
         <echo msg="Creating module zipfile." />
-        <zip destfile="./.build/mod_bpform_v${build.version}.zip" basedir="./.build/mod_bpform"/>
+        <zip destfile="./.build/mod_bpform_v${build.version}_${build.release}.zip" basedir="./.build/mod_bpform"/>
     </target>
-    
+
     <target name="build">
-        <echo msg="Creating build directory ./.build" />
-        <mkdir dir="./.build" />
-        
-        <echo msg="Building each of the extensions" />
+        <phingcall target="test"/>
+
+        <echo msg="Creating build directory ./.build"/>
+        <mkdir dir="./.build"/>
+
+        <echo msg="Building each of the extensions"/>
         <phingcall target="build:mod_bpform"></phingcall>
-        
+
     </target>
 
     <target name="clean">

@@ -1,6 +1,7 @@
 package=BPExtensions.Module
 subpackage=BPForm
-build.version=1.2.1
+build.version=
+build.release=
 copyrights=Grupa Best Sp. z o.o.
 license.name=MIT
 license.url=https://opensource.org/licenses/MIT
