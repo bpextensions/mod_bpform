@@ -3,6 +3,10 @@
 /modules/*
 !/modules/mod_bpform/
 !/modules/mod_bpform/**
+!.github
+!.github/**
+!.phpcs
+!.phpcs/**
 
 !/LICENSE
 !/.github
