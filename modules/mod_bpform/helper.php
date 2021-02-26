@@ -681,15 +681,15 @@ final class ModBPFormHelper
 
             // Load contact
             JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
-            $contact = JTable::getInstance('Contact', 'ContactTable');
-            $contact_id = $this->params->get('recipient_contact');
+            $contact    = JTable::getInstance('Contact', 'ContactTable');
+            $contact_id = (int)$this->params->get('recipient_contact');
 
             if ($contact_id > 0 and $contact->load($contact_id) and !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
                 $recipients[] = $contact->email_to;
             };
 
             // User selected list of e-mail addresses as the recipients
-        } elseif ($this->params->get('recipient') == 'emails') {
+        } elseif ($this->params->get('recipient') === 'emails') {
             $recipients = (array)$this->params->get('recipient_emails', []);
             $recipients = array_column($recipients, 'email');
 
