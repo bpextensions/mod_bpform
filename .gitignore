@@ -7,6 +7,8 @@
 !.github/**
 !.phpcs
 !.phpcs/**
+!test
+!test/**
 
 !/LICENSE
 !/.github

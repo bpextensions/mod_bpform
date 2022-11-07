@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<extension type="module" version="3.7" client="site" method="upgrade">
+<extension type="module" client="site" method="upgrade">
     <name>mod_bpform</name>
     <author>${author.name}</author>
     <creationDate>${build.date}</creationDate>
@@ -9,6 +9,8 @@
     <authorUrl>${author.url}</authorUrl>
     <version>${build.version}</version>
     <description>MOD_BPFORM_XML_DESCRIPTION</description>
+
+    <namespace path="src">BPExtensions\Module\BPForm</namespace>
 
     <files>
         <folder>forms</folder>

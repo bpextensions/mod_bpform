@@ -8,22 +8,33 @@
  * @author      ${author.name}
  */
 
+namespace BPExtensions\Module\BPForm\Site\Helper;
+
+use Exception;
+use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Captcha\Captcha;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Mail\Mail;
+use Joomla\CMS\MVC\Factory\MVCFactory;
 use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\Component\Contact\Administrator\Table\ContactTable;
+use Joomla\Event\DispatcherAwareTrait;
+use Joomla\Event\Event;
 use Joomla\Registry\Registry;
+use RuntimeException;
+use SimpleXMLElement;
 
 defined('_JEXEC') or die;
 
 /**
- * Helper for mod_bpform
+ * Helper for a BP Form module.
  */
-final class ModBPFormHelper
+class BPFormHelper
 {
+    use DispatcherAwareTrait;
 
     /**
      * Form fields.
@@ -53,27 +64,36 @@ final class ModBPFormHelper
      */
     protected $formPrefix;
 
-    public function __construct(Registry $params, stdClass $module)
+    /**
+     * Current application instance.
+     *
+     * @var CMSApplication
+     */
+    protected $app;
+
+    public function __construct(array $config = [])
     {
-        $this->params = $params;
-        $this->module = $module;
-        $this->formPrefix = 'modbpform' . $module->id;
+        $this->params     = $config['params'];
+        $this->module     = $config['module'];
+        $this->formPrefix = $config['formPrefix'];
+        $this->app        = Factory::getApplication();
+
+        if (!$this->app instanceof CMSApplication) {
+            throw new RuntimeException("Unable to get Application instance.");
+        }
     }
 
     /**
      * Process form input.
      *
-     * @param array $input Form input data array.
+     * @param   array  $input  Form input data array.
      *
      * @return bool
      *
-     * @throws Exception
+     * @throws RuntimeException
      */
     public function processForm(array $input): bool
     {
-
-        // Application instance
-        $app = Factory::getApplication();
 
         // Submission result
         $result = true;
@@ -99,54 +119,44 @@ final class ModBPFormHelper
 
         // Load recipients list from parameters and input
         $recipients = $this->getRecipients($input);
-        if (empty($recipients)) {
-            throw new Exception(Text::_('MOD_BPFORM_EXCEPTION_NO_RECIPIENTS'));
+        if ($recipients === []) {
+            throw new RuntimeException(Text::_('MOD_BPFORM_EXCEPTION_NO_RECIPIENTS'));
         }
 
         // Admin message subject
         $subject = $this->params->get('admin_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_ADMIN'));
 
         // Look for client email and set a reply to field on the admin email
-        $client_email = $this->getClientEmail($input);
-        $visitor_sender_mode = $this->params->get('visitor_sender_mode', 1);
-        $admin_sender_mode = $this->params->get('admin_sender_mode', 1);
-        $reply_to = '';
-        $sender = '';
+        $client_email        = $this->getClientEmail($input);
+        $visitor_sender_mode = (int)$this->params->get('visitor_sender_mode', 1);
+        $admin_sender_mode   = (int)$this->params->get('admin_sender_mode', 1);
+        $reply_to            = '';
+        $sender              = '';
 
         // If visitor sender mode is set to reply_to
-        if ($admin_sender_mode == 1 and !empty($client_email)) {
+        if ($admin_sender_mode === 1 and !empty($client_email)) {
             $reply_to = $client_email;
 
             // if visitor sender mode is set to Sender
-        } elseif ($admin_sender_mode == 0 and !empty($client_email)) {
+        } elseif ($admin_sender_mode === 0 and !empty($client_email)) {
             $sender = $client_email;
         }
 
-        // If user did not provided e-mail addresses and debug is enabled
-        if (empty($recipients) and $app->get('debug', 0)) {
-            $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_NO_ADMIN_RECIPIENTS'), 'error');
-            $result = false;
-
-            // If user did not provided e-mail addresses
-        } elseif (empty($recipients)) {
-            $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
-            $result = false;
-
-            // If we failed to send email
-        } elseif (!$this->sendEmail($table, $subject, $recipients, $reply_to, $sender, $attachments)) {
-            $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
+        // If we failed to send the e-mail
+        if (!$this->sendEmail($table, $subject, $recipients, $reply_to, $sender, $attachments)) {
+            $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
         }
 
-        // Send email to client if there is an email address in form
-        if ($result and !empty($client_email)) {
+        // Send a copy email to client if there is an email address in form
+        if ($result && !empty($client_email)) {
             $intro = $this->params->get('intro');
             $intro = empty(trim(strip_tags($intro))) ? Text::_('MOD_BPFORM_DEFAULT_INTRO_EMAIL_VISITOR') : $intro;
-            $body = $this->prepareBody($intro, $table);
+            $body  = $this->prepareBody($intro, $table);
 
             // Set reply too so user can answer the copy
             $reply_to = '';
-            $sender = '';
+            $sender   = '';
 
             // If visitor sender mode is set to reply_to
             if ((int)$visitor_sender_mode === 1) {
@@ -159,7 +169,7 @@ final class ModBPFormHelper
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
             if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
-                $app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
+                $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
                 $result = false;
             }
         }
@@ -167,7 +177,7 @@ final class ModBPFormHelper
         // If everything went fine
         if ($result) {
             $success_message = $this->params->get('success_message', Text::_('MOD_BPFORM_DEFAULT_SUCCESS_MESSAGE'));
-            $app->enqueueMessage($success_message, 'message');
+            $this->app->enqueueMessage($success_message, 'message');
         }
 
         return $result;
@@ -176,17 +186,14 @@ final class ModBPFormHelper
     /**
      * Convert input to array and validate data.
      *
-     * @param array $input Input data array.
+     * @param   array  $input  Input data array.
      *
      * @return array
      *
-     * @throws Exception
+     * @throws RuntimeException
      */
     protected function prepareAndValidateData(array $input): array
     {
-
-        // Application
-        $app = Factory::getApplication();
 
         // Validate each field input
         $fields = $this->getFields($input);
@@ -200,7 +207,7 @@ final class ModBPFormHelper
             $value = '';
 
             // Prepare and validate file input
-            if (key_exists($name, $input) and $field->type === 'file') {
+            if (array_key_exists($name, $input) and $field->type === 'file') {
 
                 // Prepare files input format
                 $files = $this->prepareFiles($input[$name]);
@@ -215,7 +222,7 @@ final class ModBPFormHelper
                     // There are errors, so display them and invalidate input
                 } else {
                     foreach ($errors as $error) {
-                        $app->enqueueMessage(Text::sprintf($error, $field->title), 'warning');
+                        $this->app->enqueueMessage(Text::sprintf($error, $field->title), 'warning');
                     }
                     $data = array_merge($data, [$name => false]);
                 }
@@ -256,18 +263,16 @@ final class ModBPFormHelper
             }
 
             // If this field is required and its blank
-            if ($field->required && (!key_exists($name, $input) || empty($input[$name]))) {
-                $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
+            if ($field->required && (!array_key_exists($name, $input) || empty($input[$name]))) {
+                $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
             }
         }
 
         // If captcha is enabled, validate it
-        if ($this->isCaptchaEnabled() !== false) {
-            if (!$this->validateCaptcha()) {
-                $data['captcha'] = false;
-                $app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
-            }
+        if (($this->isCaptchaEnabled() !== false) && !$this->validateCaptcha()) {
+            $data['captcha'] = false;
+            $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
         }
 
         return $data;
@@ -276,10 +281,11 @@ final class ModBPFormHelper
     /**
      * Get a list of module form fields.
      *
-     * @param array $input Values from last form posting.
-     * @param bool $forceUpdate Force update of the fields values.
+     * @param   array  $input        Values from last form posting.
+     * @param   bool   $forceUpdate  Force update of the fields values.
      *
      * @return array
+     * @throws Exception
      */
     public function getFields(array $input = [], bool $forceUpdate = false): array
     {
@@ -289,12 +295,12 @@ final class ModBPFormHelper
         if (is_null($this->fields) or $forceUpdate) {
 
             $fields_params = (array)$this->params->get('fields', []);
-            $this->fields = [];
+            $this->fields  = [];
 
             foreach ($fields_params as $field) {
 
                 // Default field value
-                $field->value           = array_key_exists($field->name, $input) ? $input[$field->name] : '';
+                $field->value = array_key_exists($field->name, $input) ? $input[$field->name] : '';
 
                 // Create field instance
                 if (in_array($field->type, ['heading', 'html'])) {
@@ -344,33 +350,33 @@ final class ModBPFormHelper
                         }
                         break;
                     case 'list':
-                        $field->value = $this->getOptionsFieldValue($field, $field->value);
-                        $xml = '<field type="list">';
-                        $xml .= $this->prepareFieldXMLOptions($field, $field->value);
-                        $xml .= '</field>';
-                        $field->value = implode(',', $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $xml            = '<field type="list">';
+                        $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
+                        $xml            .= '</field>';
+                        $field->value   = implode(',', $field->value);
                         $field->element = new SimpleXMLElement($xml);
                         break;
                     case 'recipient':
-                        $field->value = $this->getOptionsFieldValue($field, $field->value);
-                        $xml = '<field type="list">';
-                        $xml .= $this->prepareRecipientXMLOptions($field, $field->value);
-                        $xml .= '</field>';
-                        $field->value = implode(',', $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $xml            = '<field type="list">';
+                        $xml            .= $this->prepareRecipientXMLOptions($field, $field->value);
+                        $xml            .= '</field>';
+                        $field->value   = implode(',', $field->value);
                         $field->element = new SimpleXMLElement($xml);
                         $field->element->addAttribute('required', 'required');
                         break;
                     case 'radio':
-                        $field->value = $this->getOptionsFieldValue($field, $field->value);
-                        $xml = '<field type="radio">';
-                        $xml .= $this->prepareFieldXMLOptions($field, $field->value);
-                        $xml .= '</field>';
-                        $field->value = implode(',', $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $xml            = '<field type="radio">';
+                        $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
+                        $xml            .= '</field>';
+                        $field->value   = implode(',', $field->value);
                         $field->element = new SimpleXMLElement($xml);
                         break;
                     case 'checkboxes':
-                        $xml = '<field type="checkboxes">';
-                        $xml .= $this->prepareFieldXMLOptions($field, $this->getOptionsFieldValue($field, $field->value));
+                        $xml            = '<field type="checkboxes">';
+                        $xml            .= $this->prepareFieldXMLOptions($field, $this->getOptionsFieldValue($field, $field->value));
                         $xml            .= '</field>';
                         $field->element = new SimpleXMLElement($xml);
                         break;
@@ -393,7 +399,7 @@ final class ModBPFormHelper
                 // Set last parameters
                 if (isset($field->instance, $field->element)) {
                     if (!$show_labels && $field->type !== 'checkbox') {
-                        $field->element->addAttribute('labelclass', 'sr-only');
+                        $field->element->addAttribute('labelclass', 'visually-hidden');
                     }
                     $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
                     $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
@@ -419,12 +425,12 @@ final class ModBPFormHelper
     /**
      * Get field value using field value set by user.
      *
-     * @param object $field Field object.
-     * @param array $default Default field value (set by user)
+     * @param   object  $field    Field object.
+     * @param   array   $default  Default field value (set by user)
      *
      * @return array
      */
-    public function getOptionsFieldValue(object $field, $default = []): array
+    public function getOptionsFieldValue(object $field, array $default = []): array
     {
         $value = (array)$default;
         $value = array_filter($value);
@@ -458,7 +464,7 @@ final class ModBPFormHelper
         }
 
         // Render field options
-        $options = (array)$field->options;
+        $options            = (array)$field->options;
         $selected_attribute = $field->type === 'list' ? 'selected' : 'checked';
         foreach ($options as $option) {
             $selected = in_array($option->value, $value,
@@ -520,14 +526,14 @@ final class ModBPFormHelper
     /**
      * Validate file using is size
      *
-     * @param array $input Files input array.
-     * @param stdClass $field Field object.
+     * @param   array   $input  Files input array.
+     * @param   object  $field  Field object.
      *
      * @return array
      *
      * @since 1.2.0
      */
-    protected function validateFiles($input, $field): array
+    protected function validateFiles(array $input, object $field): array
     {
         $errors = [];
 
@@ -535,7 +541,7 @@ final class ModBPFormHelper
         $totalsize = 0;
         foreach ($input as $file) {
             $totalsize += $file['size'];
-            if ((!empty($file['name']) or $field->required) and !$this->validateFile($file, $field)) {
+            if ((!empty($file['name']) || $field->required) && !$this->validateFile($file, $field)) {
                 $errors[] = Text::sprintf('MOD_BPFORM_INPUT_INVALID_FILE_FORMAT_S', $file['name'], $field->title);
             }
         }
@@ -565,19 +571,19 @@ final class ModBPFormHelper
 
         // Check file against each type
         if (!empty($types)) {
-            $result = false;
+            $result    = false;
             $extension = '.' . strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
             foreach ($types as $type) {
 
-                // Its an extension and its on the list
+                // It is an extension and its on the list
                 if (strpos($type, '.') === 0 && strtolower($type) === $extension) {
                     $result = true;
                     break;
 
                 }
 
-                // Its a mime
+                // It is a mime
                 if (strpos($type, '/') !== false && fnmatch($type, $file['type'])) {
                     $result = true;
                     break;
@@ -614,14 +620,13 @@ final class ModBPFormHelper
      */
     public function isCaptchaEnabled()
     {
-        $app = Factory::getApplication();
-        $plugin = $app->get('captcha');
-        if ($app->isClient('site')) {
-            $plugin = $app->getParams()->get('captcha', $plugin);
+        $plugin = $this->app->get('captcha');
+        if ($this->app->isClient('site')) {
+            $plugin = $this->app->getParams()->get('captcha', $plugin);
         }
 
         // Check if captcha is enabled
-        if ($plugin === 0 || $plugin === '0' || $plugin === '' || $plugin === null || !$this->params->get('captcha', 0)) {
+        if (empty($plugin) || is_numeric($plugin) || !$this->params->get('captcha', 0)) {
             return false;
         }
 
@@ -638,13 +643,20 @@ final class ModBPFormHelper
     public function validateCaptcha(): bool
     {
         PluginHelper::importPlugin('captcha', $this->isCaptchaEnabled());
-        $dispatcher = JEventDispatcher::getInstance();
+
+        $event      = new Event('onCheckAnswer');
+        $dispatcher = $this->getDispatcher();
+
         try {
-            $response = $dispatcher->trigger('onCheckAnswer');
+
+            $dispatcher->dispatch($event->getName(), $event);
+            var_dump($dispatcher);
+            die;
+
+//            $response = $dispatcher->trigger('onCheckAnswer');
         } catch (Exception $e) {
-            $app = Factory::getApplication();
-            if ($app->get('debug')) {
-                $app->enqueueMessage($e->getMessage(), 'error');
+            if ($this->app->get('debug')) {
+                $this->app->enqueueMessage($e->getMessage(), 'error');
             }
             $response = false;
         }
@@ -671,9 +683,10 @@ final class ModBPFormHelper
     /**
      * Get recipients from input data and parameters.
      *
-     * @param array $input Input data.
+     * @param   array  $input  Input data.
      *
      * @return array
+     * @throws Exception
      */
     protected function getRecipients(array $input): array
     {
@@ -683,11 +696,26 @@ final class ModBPFormHelper
         if ($this->params->get('recipient') === 'contact') {
 
             // Load contact
-            JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
-            $contact    = JTable::getInstance('Contact', 'ContactTable');
+//            JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
+
+            /**
+             * @var MVCFactory   $MVCFactory
+             * @var ContactTable $contact
+             */
+            $MVCFactory = $this->app->bootComponent('Contact')->getMVCFactory();
+
+            try {
+                $contact = $MVCFactory->createTable('ContactTable');
+                if ($contact === null) {
+                    throw new RuntimeException();
+                }
+            } catch (Exception $exception) {
+                throw new RuntimeException('Unable to create a ContactTable instance!', 500);
+            }
+
             $contact_id = (int)$this->params->get('recipient_contact');
 
-            if ($contact_id > 0 and $contact->load($contact_id) and !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
+            if ($contact_id > 0 && $contact->load($contact_id) && !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
                 $recipients[] = $contact->email_to;
             };
 
@@ -738,7 +766,7 @@ final class ModBPFormHelper
     protected function getClientEmail(array $input): string
     {
         $fields = $this->getFields($input);
-        $email = '';
+        $email  = '';
         foreach ($fields as $name => $field) {
 
             // Look for first e-mail type field in fields list
