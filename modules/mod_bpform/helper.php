@@ -53,11 +53,19 @@ final class ModBPFormHelper
      */
     protected $formPrefix;
 
+    /**
+     * A captcha field input name.
+     *
+     * @var string
+     */
+    protected $captcha_field_name;
+
     public function __construct(Registry $params, stdClass $module)
     {
-        $this->params = $params;
-        $this->module = $module;
-        $this->formPrefix = 'modbpform' . $module->id;
+        $this->params             = $params;
+        $this->module             = $module;
+        $this->formPrefix         = 'modbpform' . $module->id;
+        $this->captcha_field_name = $this->formPrefix . '_captcha';
     }
 
     /**
@@ -639,10 +647,10 @@ final class ModBPFormHelper
     {
         PluginHelper::importPlugin('captcha', $this->isCaptchaEnabled());
         $dispatcher = JEventDispatcher::getInstance();
+        $app        = Factory::getApplication();
         try {
-            $response = $dispatcher->trigger('onCheckAnswer');
+            $response = $dispatcher->trigger('onCheckAnswer', [$app->input->get($this->captcha_field_name)]);
         } catch (Exception $e) {
-            $app = Factory::getApplication();
             if ($app->get('debug')) {
                 $app->enqueueMessage($e->getMessage(), 'error');
             }
@@ -879,7 +887,7 @@ final class ModBPFormHelper
             // Get an instance of the captcha class that we are using
             $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
 
-            return $captcha->display('captcha', 'mod_bpform_captcha_' . $this->module->id);
+            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $this->module->id);
         } catch (RuntimeException $e) {
             $app->enqueueMessage($e->getMessage(), 'error');
 
