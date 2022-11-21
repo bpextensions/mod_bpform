@@ -11,6 +11,7 @@
 namespace BPExtensions\Module\BPForm\Site\Dispatcher;
 
 use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
+use Exception;
 use Joomla\CMS\Dispatcher\AbstractModuleDispatcher;
 use Joomla\CMS\Helper\HelperFactoryAwareInterface;
 use Joomla\CMS\Helper\HelperFactoryAwareTrait;
@@ -33,19 +34,18 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
      *
      * @return  array
      *
+     * @throws Exception
      * @since   4.2.0
      */
     protected function getLayoutData(): array
     {
-        $data = parent::getLayoutData();
-
-        $data['formPrefix'] = 'modbpform' . $this->module->id;
-
-//        $data['list'] = $this->getHelperFactory()->getHelper('ArticlesNewsHelper')->getArticles($data['params'], $this->getApplication());
-
         /**
          * @var BPFormHelper $helper
          */
+
+        $data               = parent::getLayoutData();
+        $data['formPrefix'] = 'modbpform' . $this->module->id;
+
         $helperConfig = [
             'params'     => $data['params'],
             'module'     => $this->module,
@@ -57,12 +57,14 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $data['moduleclass_sfx'] = htmlspecialchars($data['params']->get('moduleclass_sfx'));
         $data['show_labels']     = (bool)$data['params']->get('show_labels', 1);
         $data['input']           = $app->input->post;
+        $data['helper']          = $helper;
         $data['inputFiles']      = $app->input->files;
         $data['values']          = $data['input']->get($data['formPrefix'], [], 'array');
         $data['values']          = array_merge($data['values'],
             $data['inputFiles']->get($data['formPrefix'], [], 'array'));
         $data['captchaEnabled']  = $helper->isCaptchaEnabled() !== false;
         $data['fields']          = $helper->getFields($data['values']);
+        $data['layout']          = $data['params']->get('layout', '');
 
         return $data;
     }

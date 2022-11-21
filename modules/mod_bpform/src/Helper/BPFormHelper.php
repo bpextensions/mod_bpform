@@ -14,6 +14,7 @@ use Exception;
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Captcha\Captcha;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
@@ -65,6 +66,13 @@ class BPFormHelper
     protected $formPrefix;
 
     /**
+     * A captcha field input name.
+     *
+     * @var string
+     */
+    protected $captcha_field_name;
+
+    /**
      * Current application instance.
      *
      * @var CMSApplication
@@ -73,10 +81,11 @@ class BPFormHelper
 
     public function __construct(array $config = [])
     {
-        $this->params     = $config['params'];
-        $this->module     = $config['module'];
-        $this->formPrefix = $config['formPrefix'];
-        $this->app        = Factory::getApplication();
+        $this->params             = $config['params'];
+        $this->module             = $config['module'];
+        $this->formPrefix         = $config['formPrefix'];
+        $this->captcha_field_name = $this->formPrefix . '_captcha';
+        $this->app                = Factory::getApplication();
 
         if (!$this->app instanceof CMSApplication) {
             throw new RuntimeException("Unable to get Application instance.");
@@ -290,6 +299,7 @@ class BPFormHelper
     public function getFields(array $input = [], bool $forceUpdate = false): array
     {
         $show_labels = (bool)$this->params->get('show_labels', 1);
+        $form        = new Form($this->getFormPrefix());
 
         // If fields was not processed yet
         if (is_null($this->fields) or $forceUpdate) {
@@ -298,6 +308,9 @@ class BPFormHelper
             $this->fields  = [];
 
             foreach ($fields_params as $field) {
+                /**
+                 * @var FormFieldPrototype $field
+                 */
 
                 // Default field value
                 $field->value = array_key_exists($field->name, $input) ? $input[$field->name] : '';
@@ -310,6 +323,9 @@ class BPFormHelper
                 } else {
                     $field->instance = FormHelper::loadFieldType($field->type);
                 }
+
+                // Set form object to silence the Joomla API
+                $field->instance->setForm($form);
 
                 // Setup XML field element
                 switch ($field->type) {
@@ -350,7 +366,7 @@ class BPFormHelper
                         }
                         break;
                     case 'list':
-                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
                         $xml            = '<field type="list">';
                         $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
                         $xml            .= '</field>';
@@ -358,7 +374,7 @@ class BPFormHelper
                         $field->element = new SimpleXMLElement($xml);
                         break;
                     case 'recipient':
-                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
                         $xml            = '<field type="list">';
                         $xml            .= $this->prepareRecipientXMLOptions($field, $field->value);
                         $xml            .= '</field>';
@@ -367,7 +383,7 @@ class BPFormHelper
                         $field->element->addAttribute('required', 'required');
                         break;
                     case 'radio':
-                        $field->value   = $this->getOptionsFieldValue($field, $field->value);
+                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
                         $xml            = '<field type="radio">';
                         $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
                         $xml            .= '</field>';
@@ -376,7 +392,8 @@ class BPFormHelper
                         break;
                     case 'checkboxes':
                         $xml            = '<field type="checkboxes">';
-                        $xml            .= $this->prepareFieldXMLOptions($field, $this->getOptionsFieldValue($field, $field->value));
+                        $xml            .= $this->prepareFieldXMLOptions($field,
+                            $this->getOptionsFieldValue($field, (array)$field->value));
                         $xml            .= '</field>';
                         $field->element = new SimpleXMLElement($xml);
                         break;
@@ -644,16 +661,15 @@ class BPFormHelper
     {
         PluginHelper::importPlugin('captcha', $this->isCaptchaEnabled());
 
-        $event      = new Event('onCheckAnswer');
-        $dispatcher = $this->getDispatcher();
+        $event = new Event('onCheckAnswer');
+        $event->addArgument('0', $this->app->input->get($this->captcha_field_name));
+        $dispatcher = $this->app->getDispatcher();
 
         try {
-
             $dispatcher->dispatch($event->getName(), $event);
-            var_dump($dispatcher);
+            $response = $event->getArguments();
+            var_dump($response, $event);
             die;
-
-//            $response = $dispatcher->trigger('onCheckAnswer');
         } catch (Exception $e) {
             if ($this->app->get('debug')) {
                 $this->app->enqueueMessage($e->getMessage(), 'error');
@@ -907,7 +923,7 @@ class BPFormHelper
             // Get an instance of the captcha class that we are using
             $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
 
-            return $captcha->display('captcha', 'mod_bpform_captcha_' . $this->module->id);
+            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $this->module->id);
         } catch (RuntimeException $e) {
             $app->enqueueMessage($e->getMessage(), 'error');
 

@@ -1,5 +1,7 @@
 <?php
 
+use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
+use BPExtensions\Module\BPForm\Site\Helper\FormFieldPrototype;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
@@ -13,6 +15,13 @@ defined('_JEXEC') or die;
  * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  * @author      ${author.name}
+ *
+ * @var string               $formPrefix
+ * @var string               $moduleclass_sfx
+ * @var BPFormHelper         $helper
+ * @var string               $layout
+ * @var bool                 $captchaEnabled
+ * @var FormFieldPrototype[] $fields
  */
 
 $form = new Form($formPrefix);

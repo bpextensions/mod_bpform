@@ -1,6 +1,8 @@
 <?php
 
-/**
+namespace BPExtensions\Module\BPForm\Site\Form\Rule;
+
+/*
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
@@ -12,19 +14,20 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormRule;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Mail\Mail;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 
-final class JFormRuleFields extends FormRule
+final class FieldsRule extends FormRule
 {
 
 
     /**
      * Method to test the fields subform.
      *
-     * @param SimpleXMLElement $element The SimpleXMLElement object representing the `<field>` tag for the form field object.
-     * @param mixed $value The form field value to validate.
-     * @param string $group The field name group control value. This acts as as an array container for the field.
+     * @param   SimpleXMLElement  $element   The SimpleXMLElement object representing the `<field>` tag for the form field object.
+     * @param   mixed             $value     The form field value to validate.
+     * @param   string            $group     The field name group control value. This acts as as an array container for the field.
      *                                       For example if the field has name="foo" and the group value is set to "bar" then the
      *                                       full field name would end up being "bar[foo]".
      * @param Registry $input An optional Registry object with the entire data set to validate against the entire form.
@@ -45,7 +48,7 @@ final class JFormRuleFields extends FormRule
         // Look for duplicated names
         $duplicates = [];
         foreach ($fields_value as $field) {
-            if (!key_exists($field->name, $duplicates)) {
+            if (!array_key_exists($field->name, $duplicates)) {
                 $duplicates[$field->name] = [$field->title];
             } else {
                 $duplicates[$field->name][] = $field->title;
@@ -53,7 +56,7 @@ final class JFormRuleFields extends FormRule
         }
 
         // Leave only duplicates
-        $duplicates = array_filter($duplicates, function ($v, $k) {
+        $duplicates = array_filter($duplicates, static function ($v, $k) {
             return count($v) > 1;
         }, ARRAY_FILTER_USE_BOTH);
 
@@ -71,16 +74,14 @@ final class JFormRuleFields extends FormRule
                 $emails = (array)$input->get('params.recipient_emails', []);
                 $emails = ArrayHelper::fromObject($emails);
                 $emails = array_column($emails, 'email');
-
-                require_once JPATH_SITE . '/modules/mod_bpform/helper.php';
-
-                $emails = array_filter($emails, function ($v) {
-                    return ModBPFormHelper::isValidEmail($v);
+                $emails = array_filter($emails, static function ($v) {
+                    return Mail::validateAddress($v, 'php');
                 });
 
                 // Check if there are at least 2 valid emails to use with Recipient field
                 if (count($emails) < 2) {
                     $element->addAttribute('message', 'MOD_BPFORM_RECIPIENT_EMAIL_INVALID');
+
                     return false;
                 }
 

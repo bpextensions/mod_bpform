@@ -1,5 +1,7 @@
 <?php
 
+namespace BPExtensions\Module\BPForm\Site\Form\Field;
+
 /**
  * @package     ${package}
  * @subpackage  ${subpackage}
@@ -19,14 +21,14 @@ use Joomla\CMS\Language\Text;
  *
  * @since  ${version}
  */
-class JFormFieldBPDonate extends FormField
+class BPDonateField extends FormField
 {
     /**
      * Session status variable name.
      *
      * @var string
      */
-    const SESSION_VAR_NAME = 'bpextensions_donation';
+    public const SESSION_VAR_NAME = 'bpextensions_donation';
 
     /**
      * The form field type.
@@ -74,7 +76,7 @@ class JFormFieldBPDonate extends FormField
      * @see     FormField::setup()
      * @since   ${version}
      */
-    public function setup(\SimpleXMLElement $element, $value, $group = null)
+    public function setup(\SimpleXMLElement $element, $value, $group = null): bool
     {
         $result = parent::setup($element, $value, $group);
 
@@ -96,15 +98,16 @@ class JFormFieldBPDonate extends FormField
      * @since   ${version}
      *
      */
-    protected function getInput()
+    protected function getInput(): string
     {
 
         // Show popup if needed
-        $session = Factory::getSession();
+        $app     = Factory::getApplication();
+        $session = $app->getSession();
         if (!$session->get(static::SESSION_VAR_NAME)) {
 
             // Make a notice
-            Factory::getApplication()->enqueueMessage($this->getDonateMessage(), 'notice');
+            $app->enqueueMessage($this->getDonateMessage(), 'notice');
 
             // Disable popup in this session
             $session->Set(static::SESSION_VAR_NAME, true);
@@ -121,7 +124,7 @@ class JFormFieldBPDonate extends FormField
     protected function getDonateMessage(): string
     {
         return "<p>{$this->intro_text}</p>
-        <span class=\"btn-wrapper\">
+        <span class=\"btn-wrapper\" style='float:right'>
             <a href=\"{$this->url}\" target=\"_blank\" class=\"btn\">
                 <span class=\"icon-thumbs-up\" aria-hidden=\"true\" style=\"border-radius: 3px 0 0 3px;border-right: 1px solid #b3b3b3;height: auto;line-height: inherit;margin: 0 6px 0 -10px;opacity: 1;text-shadow: none;width: 28px;\"></span>
                 {$this->button_text}
@@ -136,7 +139,7 @@ class JFormFieldBPDonate extends FormField
      *
      * @since   ${version}
      */
-    protected function getLabel()
+    protected function getLabel(): string
     {
         return '';
     }

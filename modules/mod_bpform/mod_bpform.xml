@@ -23,22 +23,21 @@
     </files>
 
     <languages folder="language">
-        <language tag="pl-PL">pl-PL/pl-PL.mod_bpform.ini</language>
-        <language tag="pl-PL">pl-PL/pl-PL.mod_bpform.sys.ini</language>
-        <language tag="en-GB">en-GB/en-GB.mod_bpform.ini</language>
-        <language tag="en-GB">en-GB/en-GB.mod_bpform.sys.ini</language>
+        <language tag="pl-PL">pl-PL/pmod_bpform.ini</language>
+        <language tag="pl-PL">pl-PL/mod_bpform.sys.ini</language>
+        <language tag="en-GB">en-GB/mod_bpform.ini</language>
+        <language tag="en-GB">en-GB/mod_bpform.sys.ini</language>
     </languages>
 
     <config>
         <fields name="params">
             <fieldset name="basic"
-                      addfieldpath="/administrator/components/com_contact/models/fields"
-                      addrulepath="/modules/mod_bpform/rules"
+                      addruleprefix="BPExtensions\Module\BPForm\Site\Form\Rule"
             >
                 <field
-                        addfieldpath="/modules/mod_bpform/fields"
+                        addfieldprefix="BPExtensions\Module\BPForm\Site\Form\Field"
                         name="donate"
-                        type="bpdonate"
+                        type="BPDonate"
                 />
                 <field name="recipient" type="radio"
                        default="contact" class="btn-group"
@@ -55,6 +54,7 @@
                         showon="recipient:contact"
                         label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_CONTACT_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_CONTACT_DESC"
+                        addfieldprefix="Joomla\Component\Contact\Administrator\Field"
                 />
                 <field
                         name="recipient_emails"
@@ -64,7 +64,7 @@
                         description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
                         multiple="true"
                         min="0"
-                        validate="recipients"
+                        validate="Recipients"
                 >
                     <form>
                         <field
@@ -76,7 +76,7 @@
                                 name="email" type="email" required="true"
                                 label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
                                 description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_DESC"
-                                validate="email"
+                                validate="Email"
                         />
                     </form>
                 </field>
@@ -102,7 +102,8 @@
             </fieldset>
             <fieldset name="fields" label="MOD_BPFORM_FIELDSET_FIELDS_LABEL"
                       description="MOD_BPFORM_FIELDSET_FIELDS_DESC"
-                      addrulepath="/modules/mod_bpform/rules">
+                      addruleprefix="BPExtensions\Module\BPForm\Site\Form\Rule"
+            >
                 <field name="show_labels" type="radio" filter="INT"
                        default="1" class="btn-group"
                        label="MOD_BPFORM_FIELD_SHOW_LABELS_LABEL"
@@ -120,10 +121,11 @@
                     <option value="1">JYES</option>
                 </field>
                 <field name="fields" type="subform" required="true" min="1"
-                       formsource="modules/mod_bpform/forms/fields.xml" multiple="true"
+                       formsource="modules/mod_bpform/forms/fields.xml"
+                       multiple="true"
                        label="MOD_BPFORM_FIELD_FIELDS_LABEL"
                        description="MOD_BPFORM_FIELD_FIELDS_DESC"
-                       validate="fields"
+                       validate="Fields"
                 />
             </fieldset>
             <fieldset name="message" label="MOD_BPFORM_FIELDSET_MESSAGE_LABEL"
@@ -163,43 +165,43 @@
                         hint="MOD_BPFORM_BASIC_FIELD_ADMIN_SUBJECT_HINT"/>
 
             </fieldset>
-            <fieldset
-                    name="advanced">
+            <fieldset name="advanced">
+
                 <field
                         name="layout"
                         type="modulelayout"
-                        default="top"
                         label="JFIELD_ALT_LAYOUT_LABEL"
-                        description="JFIELD_ALT_MODULE_LAYOUT_DESC">
-
-                </field>
+                        class="form-select"
+                        validate="moduleLayout"
+                />
 
                 <field
                         name="moduleclass_sfx"
-                        type="textarea" rows="3"
+                        type="textarea"
                         label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL"
-                        description="COM_MODULES_FIELD_MODULECLASS_SFX_DESC"/>
+                        rows="3"
+                        validate="CssIdentifier"
+                />
 
                 <field
-                        name="cache"
+                        name="owncache"
                         type="list"
-                        default="1"
                         label="COM_MODULES_FIELD_CACHING_LABEL"
-                        description="COM_MODULES_FIELD_CACHING_DESC">
-                    <option
-                            value="1">JGLOBAL_USE_GLOBAL
-                    </option>
-                    <option
-                            value="0">COM_MODULES_FIELD_VALUE_NOCACHING
-                    </option>
+                        default="1"
+                        filter="integer"
+                        validate="options"
+                >
+                    <option value="1">JGLOBAL_USE_GLOBAL</option>
+                    <option value="0">COM_MODULES_FIELD_VALUE_NOCACHING</option>
                 </field>
 
                 <field
                         name="cache_time"
-                        type="text"
-                        default="900"
+                        type="number"
                         label="COM_MODULES_FIELD_CACHE_TIME_LABEL"
-                        description="COM_MODULES_FIELD_CACHE_TIME_DESC"/>
+                        default="900"
+                        filter="integer"
+                />
             </fieldset>
         </fields>
     </config>
