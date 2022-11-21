@@ -26,6 +26,7 @@ defined('_JEXEC') or die;
 
 $form = new Form($formPrefix);
 
+
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 

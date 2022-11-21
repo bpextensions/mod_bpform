@@ -115,6 +115,7 @@ class BPFormHelper
         // Prepare data table
         $data = $this->prepareAndValidateData($input);
 
+
         // Check if every field that is required was filled
         if (in_array(false, $data, true)) {
             return false;
@@ -302,7 +303,7 @@ class BPFormHelper
         $form        = new Form($this->getFormPrefix());
 
         // If fields was not processed yet
-        if (is_null($this->fields) or $forceUpdate) {
+        if (is_null($this->fields) || $forceUpdate) {
 
             $fields_params = (array)$this->params->get('fields', []);
             $this->fields  = [];

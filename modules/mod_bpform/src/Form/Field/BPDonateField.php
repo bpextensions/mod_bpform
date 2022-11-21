@@ -12,6 +12,7 @@ namespace BPExtensions\Module\BPForm\Site\Form\Field;
 
 defined('JPATH_PLATFORM') or die;
 
+use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormField;
 use Joomla\CMS\Language\Text;
@@ -94,7 +95,7 @@ class BPDonateField extends FormField
      *
      * @return  string  The field input markup.
      *
-     * @throws Exception
+     * @throws \Exception
      * @since   ${version}
      *
      */
@@ -107,7 +108,7 @@ class BPDonateField extends FormField
         if (!$session->get(static::SESSION_VAR_NAME)) {
 
             // Make a notice
-            $app->enqueueMessage($this->getDonateMessage(), 'notice');
+            $app->enqueueMessage($this->getDonateMessage(), CMSApplicationInterface::MSG_WARNING);
 
             // Disable popup in this session
             $session->Set(static::SESSION_VAR_NAME, true);
@@ -123,11 +124,11 @@ class BPDonateField extends FormField
      */
     protected function getDonateMessage(): string
     {
-        return "<p>{$this->intro_text}</p>
-        <span class=\"btn-wrapper\" style='float:right'>
-            <a href=\"{$this->url}\" target=\"_blank\" class=\"btn\">
-                <span class=\"icon-thumbs-up\" aria-hidden=\"true\" style=\"border-radius: 3px 0 0 3px;border-right: 1px solid #b3b3b3;height: auto;line-height: inherit;margin: 0 6px 0 -10px;opacity: 1;text-shadow: none;width: 28px;\"></span>
+        return "<p style=\"margin:0;\">{$this->intro_text}</p> 
+        <span class=\"btn-wrapper\" style=\"margin-left:2em;\">
+            <a href=\"{$this->url}\" target=\"_blank\" class=\"btn btn-warning\">
                 {$this->button_text}
+                <span class=\"icon-thumbs-up\" aria-hidden=\"true\" style=\"border-radius: 3px 0 0 3px;border-right: 1px solid #b3b3b3;height: auto;line-height: inherit;margin: 0 6px 0 -10px;opacity: 1;text-shadow: none;width: 28px;\"></span>
             </a>
         </span>";
     }

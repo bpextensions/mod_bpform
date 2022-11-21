@@ -9,6 +9,7 @@
  */
 
 use BPExtensions\Module\BPForm\Site\Helper\FormFieldPrototype;
+use Joomla\CMS\Factory;
 
 defined('_JEXEC') or die;
 
@@ -29,6 +30,8 @@ if ($field->type === 'html') {
     return;
 }
 
+
 $field->instance->setup($field->element, $field->value);
+$field->instance->setDatabase(Factory::getContainer()->get('DatabaseDriver'));
 
 echo $field->instance->renderField();
