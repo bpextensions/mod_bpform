@@ -346,7 +346,10 @@ class BPFormHelper
                             $field->calendarformat = '%Y-%m-%d';
                         }
                         if ($field->calendarhours) {
-                            $field->calendarformat .= ' %H:%M';
+                            if (stripos($field->calendarformat, '%H') === false && stripos($field->calendarformat,
+                                    '%M') === false && stripos($field->calendarformat, '%S') === false) {
+                                $field->calendarformat .= ' %H:%M';
+                            }
                             $field->element->addAttribute('showtime', 'true');
                             $field->element->addAttribute('timeformat', $field->calendarhours);
                         }
@@ -961,6 +964,35 @@ class BPFormHelper
     public function getFormPrefix(): string
     {
         return $this->formPrefix;
+    }
+
+    /**
+     * Remove empty files entries.
+     *
+     * @param   array  $files  Files array.
+     *
+     * @return array
+     */
+    public static function filterFiles(array $files): array
+    {
+        $files = array_map(static function ($file) {
+            if (!is_array($file)) {
+                return null;
+            }
+            if (!array_key_exists('name', $file) || empty($file['name'])) {
+                return null;
+            }
+            if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
+                return null;
+            }
+            if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
+                return null;
+            }
+
+            return $file;
+        }, $files);
+
+        return array_filter($files);
     }
 
 }

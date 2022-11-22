@@ -73,9 +73,10 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $data['input']           = $app->input->post;
         $data['helper']          = $helper;
         $data['inputFiles']      = $app->input->files;
+        $files                   = $data['inputFiles']->get($data['formPrefix'], [], 'array');
+        $files                   = BPFormHelper::filterFiles($files);
         $data['values']          = $data['input']->get($data['formPrefix'], [], 'array');
-        $data['values']          = array_merge($data['values'],
-            $data['inputFiles']->get($data['formPrefix'], [], 'array'));
+        $data['values']          = array_merge($data['values'], $files);
         $data['captchaEnabled']  = $helper->isCaptchaEnabled() !== false;
         $data['fields']          = $helper->getFields($data['values']);
         $data['layout']          = $data['params']->get('layout', '');
