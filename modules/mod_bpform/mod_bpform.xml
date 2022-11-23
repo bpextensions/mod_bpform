@@ -14,16 +14,14 @@
 
     <files>
         <folder>forms</folder>
-        <folder>fields</folder>
         <folder>language</folder>
-        <folder>rules</folder>
+        <folder>services</folder>
+        <folder module="mod_bpform">src</folder>
         <folder>tmpl</folder>
-        <filename>helper.php</filename>
-        <filename module="mod_bpform">mod_bpform.php</filename>
     </files>
 
     <languages folder="language">
-        <language tag="pl-PL">pl-PL/pmod_bpform.ini</language>
+        <language tag="pl-PL">pl-PL/mod_bpform.ini</language>
         <language tag="pl-PL">pl-PL/mod_bpform.sys.ini</language>
         <language tag="en-GB">en-GB/mod_bpform.ini</language>
         <language tag="en-GB">en-GB/mod_bpform.sys.ini</language>

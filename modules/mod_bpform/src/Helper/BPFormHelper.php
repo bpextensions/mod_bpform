@@ -672,13 +672,13 @@ class BPFormHelper
         try {
             $dispatcher->dispatch($event->getName(), $event);
             $response = $event->getArguments();
-            var_dump($response, $event);
-            die;
+
         } catch (Exception $e) {
+            $response = false;
+
             if ($this->app->get('debug')) {
                 $this->app->enqueueMessage($e->getMessage(), 'error');
             }
-            $response = false;
         }
 
         return ($response === true) or ($response === [true]);

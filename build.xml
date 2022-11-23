@@ -53,7 +53,7 @@
         </copy>
 
         <echo msg="Creating module zipfile." />
-        <zip destfile="./.build/mod_bpform_v${build.version}_${build.release}.zip" basedir="./.build/mod_bpform"/>
+        <zip destfile="./.build/mod_bpform_v${build.version}_${build.release}_J4.zip" basedir="./.build/mod_bpform"/>
     </target>
 
     <target name="build">
