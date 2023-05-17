@@ -68,7 +68,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
 
         $app = $this->getApplication();
 
-        $data['moduleclass_sfx'] = htmlspecialchars($data['params']->get('moduleclass_sfx'));
+        $data['moduleclass_sfx'] = htmlspecialchars($data['params']->get('moduleclass_sfx', ''));
         $data['show_labels']     = (bool)$data['params']->get('show_labels', 1);
         $data['input']           = $app->input->post;
         $data['helper']          = $helper;
