@@ -37,7 +37,7 @@ $field->instance->setDatabase(Factory::getContainer()->get('DatabaseDriver'));
 
 // Rendering options
 $renderOptions = [];
-if (!$show_labels) {
+if (!$show_labels && !in_array($field->type, ['checkbox', 'checkboxes'])) {
     $renderOptions['hiddenLabel'] = true;
 }
 

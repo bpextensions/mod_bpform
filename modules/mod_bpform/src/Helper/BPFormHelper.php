@@ -421,7 +421,7 @@ class BPFormHelper
                 if (isset($field->instance, $field->element)) {
 
                     // If labels are disabled and a default placeholder was not set
-                    if (!$show_labels && $field->type !== 'checkbox' && empty($field->hint)) {
+                    if (!$show_labels && empty($field->hint) && !in_array($field->type, ['checkbox', 'checkboxes'])) {
                         $hint = $field->title . ($field->required ? ' *' : '');
                         $field->element->addAttribute('hint', $hint);
                     }
