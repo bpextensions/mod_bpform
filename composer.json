@@ -18,5 +18,10 @@
     },
     "require": {
         "ext-simplexml": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }
