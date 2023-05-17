@@ -26,7 +26,6 @@ defined('_JEXEC') or die;
 
 $form = new Form($formPrefix);
 
-
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 
@@ -40,11 +39,11 @@ $form = new Form($formPrefix);
                 <?php echo $helper->getCaptcha() ?>
             </div>
         <?php endif ?>
-        <div class="form-actions">
-            <button class="btn btn-default" type="reset">
+        <div class="form-actions d-flex justify-content-between">
+            <button class="btn btn-outline-primary" type="reset">
                 <?php echo Text::_('MOD_BPFORM_BUTTON_RESET_LABEL') ?>
             </button>
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-primary px-5" type="submit">
                 <?php echo Text::_('MOD_BPFORM_BUTTON_SEND_LABEL') ?>
             </button>
         </div>
