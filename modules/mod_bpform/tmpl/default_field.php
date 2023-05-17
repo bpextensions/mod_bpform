@@ -14,7 +14,8 @@ use Joomla\CMS\Factory;
 defined('_JEXEC') or die;
 
 /**
- * @var $field FormFieldPrototype
+ * @var FormFieldPrototype $field       Field type.
+ * @var bool               $show_labels Show field labels?
  */
 
 if ($field->type === 'heading') {
@@ -34,4 +35,10 @@ if ($field->type === 'html') {
 $field->instance->setup($field->element, $field->value);
 $field->instance->setDatabase(Factory::getContainer()->get('DatabaseDriver'));
 
-echo $field->instance->renderField();
+// Rendering options
+$renderOptions = [];
+if (!$show_labels) {
+    $renderOptions['hiddenLabel'] = true;
+}
+
+echo $field->instance->renderField($renderOptions);

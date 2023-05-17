@@ -332,15 +332,12 @@ class BPFormHelper
                 switch ($field->type) {
                     case 'text':
                         $field->element = new SimpleXMLElement('<field type="text" />');
-                        $field->element->addAttribute('hint', $field->hint);
                         break;
                     case 'email':
                         $field->element = new SimpleXMLElement('<field type="email" />');
-                        $field->element->addAttribute('hint', $field->hint);
                         break;
                     case 'calendar':
                         $field->element = new SimpleXMLElement('<field type="calendar" />');
-                        $field->element->addAttribute('hint', $field->hint);
 
                         if (empty($field->calendarformat)) {
                             $field->calendarformat = '%Y-%m-%d';
@@ -358,7 +355,6 @@ class BPFormHelper
                         break;
                     case 'tel':
                         $field->element = new SimpleXMLElement('<field type="tel" />');
-                        $field->element->addAttribute('hint', $field->hint);
                         break;
                     case 'file':
                         $field->element = new SimpleXMLElement('<field type="file" />');
@@ -403,7 +399,6 @@ class BPFormHelper
                         break;
                     case 'textarea':
                         $field->element = new SimpleXMLElement('<field type="textarea" />');
-                        $field->element->addAttribute('hint', $field->hint);
                         break;
                     case 'heading':
                     case 'html':
@@ -417,11 +412,20 @@ class BPFormHelper
                         break;
                 }
 
-                // Set last parameters
+                // Set field hint if present
+                if (isset($field->element) && $field->hint !== '') {
+                    $field->element->addAttribute('hint', $field->hint);
+                }
+
+                // Finishing parameters
                 if (isset($field->instance, $field->element)) {
-                    if (!$show_labels && $field->type !== 'checkbox') {
-                        $field->element->addAttribute('labelclass', 'visually-hidden');
+
+                    // If labels are disabled and a default placeholder was not set
+                    if (!$show_labels && $field->type !== 'checkbox' && empty($field->hint)) {
+                        $hint = $field->title . ($field->required ? ' *' : '');
+                        $field->element->addAttribute('hint', $hint);
                     }
+
                     $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
                     $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
 
@@ -480,7 +484,7 @@ class BPFormHelper
         $xml = '';
 
         // For list/select type fields, add a placeholder if exists
-        if (!empty($field->hint) and $field->type === 'list') {
+        if (!empty($field->hint) && $field->type === 'list') {
             $xml .= '<option value="">- ' . $field->hint . ' -</option>';
         }
 
