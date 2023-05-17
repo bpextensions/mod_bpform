@@ -66,12 +66,12 @@
                 >
                     <form>
                         <field
-                                name="name" type="text" required="true"
+                                name="name" type="text" required="true" autocomplete="name"
                                 label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_NAME_LABEL"
                                 description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_NAME_DESC"
                         />
                         <field
-                                name="email" type="email" required="true"
+                                name="email" type="email" required="true" autocomplete="email"
                                 label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_LABEL"
                                 description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_EMAIL_DESC"
                                 validate="Email"
