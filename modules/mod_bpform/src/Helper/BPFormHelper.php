@@ -97,11 +97,11 @@ class BPFormHelper
      *
      * @param   array  $input  Form input data array.
      *
-     * @return bool
+     * @return bool|null
      *
      * @throws RuntimeException
      */
-    public function processForm(array $input): bool
+    public function processForm(array $input): ?bool
     {
 
         // Submission result
@@ -109,12 +109,11 @@ class BPFormHelper
 
         // There is nothing to process, exit method
         if (empty($input)) {
-            return true;
+            return null;
         }
 
         // Prepare data table
         $data = $this->prepareAndValidateData($input);
-
 
         // Check if every field that is required was filled
         if (in_array(false, $data, true)) {
@@ -719,17 +718,14 @@ class BPFormHelper
         // If user selected contact as recipient
         if ($this->params->get('recipient') === 'contact') {
 
-            // Load contact
-//            JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_contact/tables');
-
             /**
              * @var MVCFactory   $MVCFactory
              * @var ContactTable $contact
              */
-            $MVCFactory = $this->app->bootComponent('Contact')->getMVCFactory();
+            $MVCFactory = $this->app->bootComponent('com_contact')->getMVCFactory();
 
             try {
-                $contact = $MVCFactory->createTable('ContactTable');
+                $contact = $MVCFactory->createTable('Contact', 'Administrator');
                 if ($contact === null) {
                     throw new RuntimeException();
                 }

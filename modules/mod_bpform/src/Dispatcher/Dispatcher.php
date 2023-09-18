@@ -17,6 +17,7 @@ use Joomla\CMS\Dispatcher\AbstractModuleDispatcher;
 use Joomla\CMS\Helper\HelperFactoryAwareInterface;
 use Joomla\CMS\Helper\HelperFactoryAwareTrait;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('JPATH_PLATFORM') or die;
@@ -97,8 +98,10 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $this->loadLanguage();
 
         try {
-            if ($data['helper']->processForm($data['values'])) {
+            if ($data['helper']->processForm($data['values']) === true) {
                 $this->data['fields'] = $data['helper']->getFields([], true);
+                $data['app']->redirect(Uri::current(), 302);
+                $data['app']->close();
             }
         } catch (Exception $e) {
             if ($data['app']->get('debug', false)) {
