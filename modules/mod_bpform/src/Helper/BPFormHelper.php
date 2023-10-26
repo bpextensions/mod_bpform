@@ -674,7 +674,7 @@ class BPFormHelper
 
         try {
             $dispatcher->dispatch($event->getName(), $event);
-            $response = $event->getArguments();
+            $response = $event->getArgument('result');
 
         } catch (Exception $e) {
             $response = false;

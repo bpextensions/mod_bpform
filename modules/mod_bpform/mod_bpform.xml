@@ -181,11 +181,12 @@
                         validate="CssIdentifier"
                 />
 
+
                 <field
-                        name="owncache"
+                        name="cache"
                         type="list"
                         label="COM_MODULES_FIELD_CACHING_LABEL"
-                        default="1"
+                        default="0"
                         filter="integer"
                         validate="options"
                 >
@@ -200,6 +201,14 @@
                         default="900"
                         filter="integer"
                 />
+
+                <field
+                        name="cachemode"
+                        type="hidden"
+                        default="itemid"
+                >
+                    <option value="itemid"></option>
+                </field>
             </fieldset>
         </fields>
     </config>
