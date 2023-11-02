@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @package     ${package}
+ *
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
+ * @license     ${license.name}; see ${license.url}
+ * @author      ${author.name}
+ */
+
 namespace BPExtensions\Module\BPForm\Site\Helper;
 
 use Joomla\Registry\Registry;
