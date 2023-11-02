@@ -13,11 +13,11 @@
         "php": "^7.2|^8.0",
         "squizlabs/php_codesniffer": "^3.7",
         "phpcompatibility/php-compatibility": "^9.3",
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
-        "ext-json": "*"
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
     },
     "require": {
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-json": "*"
     },
     "config": {
         "allow-plugins": {

@@ -21,6 +21,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Mail\Mail;
 use Joomla\CMS\MVC\Factory\MVCFactory;
 use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\CMS\User\User;
 use Joomla\Component\Contact\Administrator\Table\ContactTable;
 use Joomla\Event\DispatcherAwareTrait;
 use Joomla\Event\Event;
@@ -79,6 +80,16 @@ class BPFormHelper
      */
     protected $app;
 
+    /**
+     * @var null|SpamHelper
+     */
+    protected $spamHelper;
+
+    /**
+     * @var null|User
+     */
+    protected $user;
+
     public function __construct(array $config = [])
     {
         $this->params             = $config['params'];
@@ -86,10 +97,41 @@ class BPFormHelper
         $this->formPrefix         = $config['formPrefix'];
         $this->captcha_field_name = $this->formPrefix . '_captcha';
         $this->app                = Factory::getApplication();
+        $this->spamHelper = new SpamHelper($this->params);
+        $this->user = $this->app->getIdentity();
 
         if (!$this->app instanceof CMSApplication) {
             throw new RuntimeException("Unable to get Application instance.");
         }
+    }
+
+    /**
+     * Remove empty files entries.
+     *
+     * @param   array  $files  Files array.
+     *
+     * @return array
+     */
+    public static function filterFiles(array $files): array
+    {
+        $files = array_map(static function ($file) {
+            if (!is_array($file)) {
+                return null;
+            }
+            if (!array_key_exists('name', $file) || empty($file['name'])) {
+                return null;
+            }
+            if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
+                return null;
+            }
+            if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
+                return null;
+            }
+
+            return $file;
+        }, $files);
+
+        return array_filter($files);
     }
 
     /**
@@ -200,6 +242,7 @@ class BPFormHelper
      * @return array
      *
      * @throws RuntimeException
+     * @throws Exception
      */
     protected function prepareAndValidateData(array $input): array
     {
@@ -209,6 +252,17 @@ class BPFormHelper
 
         $data = [];
 
+        // Check client IP Address against the black list
+        if (!$this->spamHelper->clientInBlacklist()) {
+            if ($this->user->authorise('core.admin')) {
+                $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_IP_BLACKLIST_ERROR_S',
+                    $this->spamHelper->getClientIp()), 'warning');
+            }
+
+            // Invalidate data to stop message from being sent
+            return [false];
+        }
+
         // Process each field
         foreach ($fields as $name => $field) {
 
@@ -216,7 +270,7 @@ class BPFormHelper
             $value = '';
 
             // Prepare and validate file input
-            if (array_key_exists($name, $input) and $field->type === 'file') {
+            if (array_key_exists($name, $input) && $field->type === 'file') {
 
                 // Prepare files input format
                 $files = $this->prepareFiles($input[$name]);
@@ -276,12 +330,24 @@ class BPFormHelper
                 $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
             }
+
+            // Check field value for forbidden words
+            $filterValue = is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR) : (string)$value;
+            if (!$this->spamHelper->filterText((string)$filterValue)) {
+                $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
+                if ($this->user->authorise('core.admin')) {
+                    $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_SPAM_BLACKLIST_ERROR_S', $field->title),
+                        'warning');
+
+                }
+                $data[$name] = false;
+            }
         }
 
         // If captcha is enabled, validate it
         if (($this->isCaptchaEnabled() !== false) && !$this->validateCaptcha()) {
             $data['captcha'] = false;
-            $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
+            $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
         }
 
         return $data;
@@ -447,6 +513,16 @@ class BPFormHelper
     }
 
     /**
+     * Get for prefix for current module instance.
+     *
+     * @return string
+     */
+    public function getFormPrefix(): string
+    {
+        return $this->formPrefix;
+    }
+
+    /**
      * Get field value using field value set by user.
      *
      * @param   object  $field    Field object.
@@ -473,8 +549,8 @@ class BPFormHelper
     /**
      * Prepare XML field options for checkboxes,radios and list type fields.
      *
-     * @param object $field Field object.
-     * @param array $value Field value.
+     * @param   object  $field  Field object.
+     * @param   array   $value  Field value.
      *
      * @return string
      */
@@ -502,8 +578,8 @@ class BPFormHelper
     /**
      * Prepare XML field options for checkboxes,radios and list type fields.
      *
-     * @param object $field Field object.
-     * @param array $value Field value.
+     * @param   object  $field  Field object.
+     * @param   array   $value  Field value.
      *
      * @return string
      */
@@ -530,7 +606,7 @@ class BPFormHelper
     /**
      * Prepare files array.
      *
-     * @param array $input Array of input files.
+     * @param   array  $input  Array of input files.
      *
      * @return array
      */
@@ -572,7 +648,8 @@ class BPFormHelper
 
         // If files size limit exceeded
         if ($field->maxtotalfilesize < ($totalsize / 1024 / 1024)) {
-            $errors[] = Text::sprintf('MOD_BPFORM_INPUT_MAXTOTALFILESIZE_EXCEEDED_S', $field->title, $field->maxtotalfilesize);
+            $errors[] = Text::sprintf('MOD_BPFORM_INPUT_MAXTOTALFILESIZE_EXCEEDED_S', $field->title,
+                $field->maxtotalfilesize);
         }
 
         return $errors;
@@ -581,8 +658,8 @@ class BPFormHelper
     /**
      * Validate input file against field "accept" attribute.
      *
-     * @param array $file Input file array.
-     * @param object $field Field object
+     * @param   array   $file   Input file array.
+     * @param   object  $field  Field object
      *
      * @return bool
      */
@@ -621,7 +698,7 @@ class BPFormHelper
     /**
      * Get a list of file types and mimes.
      *
-     * @param string $accept The content of accept attribute.
+     * @param   string  $accept  The content of accept attribute.
      *
      * @return array
      */
@@ -688,9 +765,30 @@ class BPFormHelper
     }
 
     /**
+     * Collect attachments from validated data.
+     *
+     * @param   array  $data  Validated data.
+     *
+     * @return array
+     */
+    protected function collectAttachments(array $data): array
+    {
+        $attachments = [];
+
+        // Collect each attachment
+        foreach ($data as $name => $entry) {
+            if ($entry->type === 'file' and !empty($entry->value)) {
+                $attachments = array_merge($attachments, $entry->value);
+            }
+        }
+
+        return $attachments;
+    }
+
+    /**
      * Prepare data html table.
      *
-     * @param array $data Form data.
+     * @param   array  $data  Form data.
      *
      * @return string
      */
@@ -737,7 +835,7 @@ class BPFormHelper
 
             if ($contact_id > 0 && $contact->load($contact_id) && !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
                 $recipients[] = $contact->email_to;
-            };
+            }
 
             // User selected list of e-mail addresses as the recipients
         } elseif ($this->params->get('recipient') === 'emails') {
@@ -767,7 +865,7 @@ class BPFormHelper
     /**
      * Check if this e-mail is valid.
      *
-     * @param string $email E-mail address to validate.
+     * @param   string  $email  E-mail address to validate.
      *
      * @return bool
      */
@@ -779,7 +877,7 @@ class BPFormHelper
     /**
      * Look for e-mail in form fields.
      *
-     * @param array $input Form data.
+     * @param   array  $input  Form data.
      *
      * @return string
      */
@@ -806,19 +904,25 @@ class BPFormHelper
     /**
      * Send email form.
      *
-     * @param string $body E-mail body.
-     * @param string $subject E-mail subject.
-     * @param array $recipients Array of E-mail addresses.
-     * @param string $reply_to Reply-to e-mail address.
-     * @param string $sender Set sender e-mail address.
-     * @param array $attachments A list of message attachments using PHP file array format.
+     * @param   string  $body         E-mail body.
+     * @param   string  $subject      E-mail subject.
+     * @param   array   $recipients   Array of E-mail addresses.
+     * @param   string  $reply_to     Reply-to e-mail address.
+     * @param   string  $sender       Set sender e-mail address.
+     * @param   array   $attachments  A list of message attachments using PHP file array format.
      *
      * @return bool
      *
      * @throws Exception
      */
-    protected function sendEmail(string $body, string $subject, array $recipients, string $reply_to = '', string $sender = '', array $attachments = []): bool
-    {
+    protected function sendEmail(
+        string $body,
+        string $subject,
+        array $recipients,
+        string $reply_to = '',
+        string $sender = '',
+        array $attachments = []
+    ): bool {
 
         // E-mail class instance
         $mail = Factory::getMailer();
@@ -867,8 +971,8 @@ class BPFormHelper
     /**
      * Prepare message body
      *
-     * @param string $intro Message intro.
-     * @param string $table Message data table.
+     * @param   string  $intro  Message intro.
+     * @param   string  $table  Message data table.
      *
      * @return string
      */
@@ -933,66 +1037,6 @@ class BPFormHelper
 
             return '';
         }
-    }
-
-    /**
-     * Collect attachments from validated data.
-     *
-     * @param array $data Validated data.
-     *
-     * @return array
-     */
-    protected function collectAttachments(array $data): array
-    {
-        $attachments = [];
-
-        // Collect each attachment
-        foreach ($data as $name => $entry) {
-            if ($entry->type === 'file' and !empty($entry->value)) {
-                $attachments = array_merge($attachments, $entry->value);
-            }
-        }
-
-        return $attachments;
-    }
-
-    /**
-     * Get for prefix for current module instance.
-     *
-     * @return string
-     */
-    public function getFormPrefix(): string
-    {
-        return $this->formPrefix;
-    }
-
-    /**
-     * Remove empty files entries.
-     *
-     * @param   array  $files  Files array.
-     *
-     * @return array
-     */
-    public static function filterFiles(array $files): array
-    {
-        $files = array_map(static function ($file) {
-            if (!is_array($file)) {
-                return null;
-            }
-            if (!array_key_exists('name', $file) || empty($file['name'])) {
-                return null;
-            }
-            if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
-                return null;
-            }
-            if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
-                return null;
-            }
-
-            return $file;
-        }, $files);
-
-        return array_filter($files);
     }
 
 }
