@@ -332,7 +332,7 @@ class BPFormHelper
             }
 
             // Check field value for forbidden words
-            $filterValue = is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR) : (string)$value;
+            $filterValue = is_array($value) ? json_encode($value) : (string)$value;
             if (!$this->spamHelper->filterText((string)$filterValue)) {
                 $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
                 if ($this->user->authorise('core.admin')) {
