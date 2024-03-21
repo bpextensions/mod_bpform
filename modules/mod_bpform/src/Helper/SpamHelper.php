@@ -111,7 +111,7 @@ class SpamHelper
     /**
      * Get client IP address.
      *
-     * @return bool
+     * @return string
      */
     public function getClientIp(): string
     {
