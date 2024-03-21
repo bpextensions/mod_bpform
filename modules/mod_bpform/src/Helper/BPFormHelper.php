@@ -118,20 +118,45 @@ class BPFormHelper
             if (!is_array($file)) {
                 return null;
             }
-            if (!array_key_exists('name', $file) || empty($file['name'])) {
-                return null;
-            }
-            if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
-                return null;
-            }
-            if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
-                return null;
+
+            // a multi-file field
+            if (array_key_exists(0, $file)) {
+                foreach ($file as $idx => $entry) {
+                    $file[$idx] = self::filterFilesArray($entry);
+                }
+
+                return $file;
             }
 
-            return $file;
+            return self::filterFilesArray($file);
         }, $files);
 
         return array_filter($files);
+    }
+
+    /**
+     * Check single file entry.
+     *
+     * @param   array  $file
+     *
+     * @return array
+     */
+    private static function filterFilesArray(array $file): array
+    {
+        if (!is_array($file)) {
+            return [];
+        }
+        if (!array_key_exists('name', $file) || empty($file['name'])) {
+            return [];
+        }
+        if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
+            return [];
+        }
+        if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
+            return [];
+        }
+
+        return $file;
     }
 
     /**
