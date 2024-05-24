@@ -125,28 +125,52 @@
                         name="message_visitor_note"
                         type="spacer"
                         label="MOD_BPFORM_MESSAGE_VISITOR_NOTE"
-                        class="muted"
+                        class="h2"
                 />
                 <field
                         name="success_message" type="textarea" rows="3"
                         label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
-                        hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"/>
+                        hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"
+                />
                 <field
                         name="client_subject" type="text"
                         label="MOD_BPFORM_BASIC_FIELD_SUBJECT_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
-                        hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"/>
+                        hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"
+                />
                 <field
                         name="intro" type="editor" rows="3" filter="safehtml" height="250"
                         buttons="false"
                         label="MOD_BPFORM_BASIC_FIELD_INTRO_LABEL"
-                        description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"/>
+                        description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"
+                />
+                <field
+                        name="message_attachments" type="subform"
+                        label="MOD_BPFORM_BASIC_FIELD_MESSAGE_ATTACHMENTS_LABEL"
+                        description="MOD_BPFORM_BASIC_FIELD_MESSAGE_ATTACHMENTS_DESC"
+                        multiple="true"
+                        min="0"
+                        validate="MessageAttachments"
+                >
+                    <form>
+                        <field
+                                name="file"
+                                type="media"
+                                label="MOD_BPFORM_BASIC_FIELD_MESSAGE_ATTACHMENTS_FILE_LABEL"
+                                schemes="http,https"
+                                types="images,audios,videos,documents"
+                                preview="false"
+                                validate="url"
+                                relative="true"
+                        />
+                    </form>
+                </field>
                 <field
                         name="message_admin_note"
                         type="spacer"
                         label="MOD_BPFORM_MESSAGE_ADMIN_NOTE"
-                        class="muted"
+                        class="h2"
                 />
                 <field
                         name="admin_subject" type="text"

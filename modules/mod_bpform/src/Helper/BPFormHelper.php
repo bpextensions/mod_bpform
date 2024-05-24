@@ -210,15 +210,15 @@ class BPFormHelper
         $sender              = '';
 
         // If visitor sender mode is set to reply_to
-        if ($admin_sender_mode === 1 and !empty($client_email)) {
+        if ($admin_sender_mode === 1 && !empty($client_email)) {
             $reply_to = $client_email;
 
             // if visitor sender mode is set to Sender
-        } elseif ($admin_sender_mode === 0 and !empty($client_email)) {
+        } elseif ($admin_sender_mode === 0 && !empty($client_email)) {
             $sender = $client_email;
         }
 
-        // If we failed to send the e-mail
+        // If we failed to send the message to administrator
         if (!$this->sendEmail($table, $subject, $recipients, $reply_to, $sender, $attachments)) {
             $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
@@ -241,6 +241,16 @@ class BPFormHelper
                 // if visitor sender mode is set to Sender
             } elseif ((int)$visitor_sender_mode === 0) {
                 $sender = current($recipients);
+            }
+
+            // Add message attachments to the confirmation message
+            $replyAttachments = $this->params->get('message_attachments', []);
+            $attachments      = [];
+            foreach ($replyAttachments as $attachment) {
+                $attachmentPath = realpath(JPATH_ROOT . '/' . $attachment->file);
+                if ($attachment->file !== '' && file_exists($attachmentPath)) {
+                    $attachments[] = $attachmentPath;
+                }
             }
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
@@ -969,7 +979,15 @@ class BPFormHelper
 
         // If there are attachments to add
         foreach ($attachments as $attachment) {
-            $mail->addAttachment($attachment['tmp_name'], $attachment['name']);
+            if (is_array($attachment)) {
+                $path     = $attachment['tmp_name'];
+                $filename = $attachment['name'];
+            } else {
+                $path     = $attachment;
+                $filename = pathinfo($attachment, PATHINFO_BASENAME);
+            }
+
+            $mail->addAttachment($path, $filename);
         }
 
         // Set body
