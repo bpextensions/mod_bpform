@@ -42,13 +42,13 @@ class SpamHelper
     {
 
         // Prepare words blacklist
-        $words                 = $params->get('words_blacklist');
+        $words = $params->get('words_blacklist', '');
         $this->words_blacklist = explode(',', $words);
         array_walk($this->words_blacklist, 'trim');
         $this->words_blacklist = array_filter($this->words_blacklist);
 
         // Prepare IP blacklist
-        $addresses          = $params->get('ip_blacklist');
+        $addresses = $params->get('ip_blacklist', '');
         $addresses          = str_ireplace([',', ';'], "\n", $addresses);
         $this->ip_blacklist = explode("\n", $addresses);
         array_walk($this->ip_blacklist, 'trim');
