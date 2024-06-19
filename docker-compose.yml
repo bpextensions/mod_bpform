@@ -1,0 +1,53 @@
+name: bpform
+services:
+
+  joomla:
+    image: joomla:5.1-php8.3-apache
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - mariadb
+    environment:
+      JOOMLA_DB_HOST: mariadb
+      JOOMLA_DB_USER: joomla_db
+      JOOMLA_DB_PASSWORD: joomla_db
+      JOOMLA_DB_NAME: joomla_db
+      JOOMLA_SITE_NAME: BP Form Dev
+      JOOMLA_ADMIN_EMAIL: webmaster@localhost.com
+      JOOMLA_ADMIN_USERNAME: test
+      JOOMLA_ADMIN_USER: test
+      JOOMLA_ADMIN_PASSWORD: testtesttesttest
+    volumes:
+      - ./modules/mod_bpform:/var/www/html/modules/mod_bpform
+
+  mariadb:
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: joomla_db
+      MYSQL_USER: joomla_db
+      MYSQL_PASSWORD: joomla_db
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    ports:
+      - 8001:80
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: root
+    links:
+      - mariadb
+
+  maildev:
+    image: maildev/maildev
+    restart: unless-stopped
+    environment:
+      MAILDEV_WEB_PORT: 8082
+      MAILDEV_SMTP_PORT: 8025
+    ports:
+      - 8082:8082
+      - 8025:8025
