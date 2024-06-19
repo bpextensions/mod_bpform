@@ -126,7 +126,7 @@ class BPDonateField extends FormField
     {
         return "<p style=\"margin:0;\">{$this->intro_text}</p> 
         <span class=\"btn-wrapper\" style=\"margin-left:2em;\">
-            <a href=\"{$this->url}\" target=\"_blank\" class=\"btn btn-warning\">
+            <a href=\"{$this->url}\" target=\"_blank\" class=\"btn btn-warning text-decoration-none text-dark\">
                 {$this->button_text}
                 <span class=\"icon-thumbs-up\" aria-hidden=\"true\" style=\"border-radius: 3px 0 0 3px;border-right: 1px solid #b3b3b3;height: auto;line-height: inherit;margin: 0 6px 0 -10px;opacity: 1;text-shadow: none;width: 28px;\"></span>
             </a>
