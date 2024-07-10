@@ -10,22 +10,25 @@
 
 namespace BPExtensions\Module\BPForm\Site\Helper;
 
+use BlackListException;
+use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
+use BPExtensions\Module\BPForm\Site\Storage\MailStorage;
+use BPExtensions\Module\BPForm\Site\Validator\FormValidator;
+use BPExtensions\Module\BPForm\Site\Validator\SpamValidator;
+use CaptchaException;
 use Exception;
 use Joomla\CMS\Application\CMSApplication;
-use Joomla\CMS\Captcha\Captcha;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Mail\Mail;
 use Joomla\CMS\MVC\Factory\MVCFactory;
-use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\User\User;
 use Joomla\Component\Contact\Administrator\Table\ContactTable;
 use Joomla\Event\DispatcherAwareTrait;
-use Joomla\Event\Event;
 use Joomla\Registry\Registry;
+use NoRecipientsException;
 use RuntimeException;
 use SimpleXMLElement;
 
@@ -67,13 +70,6 @@ class BPFormHelper
     protected $formPrefix;
 
     /**
-     * A captcha field input name.
-     *
-     * @var string
-     */
-    protected $captcha_field_name;
-
-    /**
      * Current application instance.
      *
      * @var CMSApplication
@@ -81,82 +77,42 @@ class BPFormHelper
     protected $app;
 
     /**
-     * @var null|SpamHelper
+     * @var null|SpamValidator
      */
-    protected $spamHelper;
+    protected $spamValidator;
+
+    /**
+     * @var null|FormValidator
+     */
+    protected $formValidator;
 
     /**
      * @var null|User
      */
     protected $user;
 
+    /**
+     * @var MailStorage
+     */
+    protected $mailStorage;
+
+    /**
+     * @throws Exception
+     */
     public function __construct(array $config = [])
     {
         $this->params             = $config['params'];
         $this->module             = $config['module'];
         $this->formPrefix         = $config['formPrefix'];
-        $this->captcha_field_name = $this->formPrefix . '_captcha';
         $this->app                = Factory::getApplication();
-        $this->spamHelper = new SpamHelper($this->params);
+        $this->spamValidator = new SpamValidator($this->app, $config);
+        $this->formValidator = new FormValidator($this->app, $config);
         $this->user = $this->app->getIdentity();
+        $this->mailStorage = new MailStorage();
 
         if (!$this->app instanceof CMSApplication) {
             throw new RuntimeException("Unable to get Application instance.");
         }
-    }
-
-    /**
-     * Remove empty files entries.
-     *
-     * @param   array  $files  Files array.
-     *
-     * @return array
-     */
-    public static function filterFiles(array $files): array
-    {
-        $files = array_map(static function ($file) {
-            if (!is_array($file)) {
-                return null;
-            }
-
-            // a multi-file field
-            if (array_key_exists(0, $file)) {
-                foreach ($file as $idx => $entry) {
-                    $file[$idx] = self::filterFilesArray($entry);
-                }
-
-                return $file;
-            }
-
-            return self::filterFilesArray($file);
-        }, $files);
-
-        return array_filter($files);
-    }
-
-    /**
-     * Check single file entry.
-     *
-     * @param   array  $file
-     *
-     * @return array
-     */
-    private static function filterFilesArray(array $file): array
-    {
-        if (!is_array($file)) {
-            return [];
-        }
-        if (!array_key_exists('name', $file) || empty($file['name'])) {
-            return [];
-        }
-        if (!array_key_exists('tmp_name', $file) || empty($file['tmp_name'])) {
-            return [];
-        }
-        if (!array_key_exists('size', $file) || (int)$file['size'] === 0) {
-            return [];
-        }
-
-        return $file;
     }
 
     /**
@@ -167,20 +123,21 @@ class BPFormHelper
      * @return bool|null
      *
      * @throws RuntimeException
+     * @throws Exception
      */
-    public function processForm(array $input): ?bool
+    public function submit(array $input = []): ?bool
     {
 
         // Submission result
         $result = true;
 
         // There is nothing to process, exit method
-        if (empty($input)) {
+        if ($input === []) {
             return null;
         }
 
         // Prepare data table
-        $data = $this->prepareAndValidateData($input);
+        $data = $this->prepareData($input);
 
         // Check if every field that is required was filled
         if (in_array(false, $data, true)) {
@@ -191,12 +148,12 @@ class BPFormHelper
         $attachments = $this->collectAttachments($data);
 
         // Create inquiry html table
-        $table = $this->createTable($data);
+        $renderedFormValues = $this->renderFormValues($data);
 
         // Load recipients list from parameters and input
         $recipients = $this->getRecipients($input);
         if ($recipients === []) {
-            throw new RuntimeException(Text::_('MOD_BPFORM_EXCEPTION_NO_RECIPIENTS'));
+            throw new NoRecipientsException();
         }
 
         // Admin message subject
@@ -219,7 +176,7 @@ class BPFormHelper
         }
 
         // If we failed to send the message to administrator
-        if (!$this->sendEmail($table, $subject, $recipients, $reply_to, $sender, $attachments)) {
+        if (!$this->mailStorage->store($renderedFormValues, $subject, $recipients, $reply_to, $sender, $attachments)) {
             $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
             $result = false;
         }
@@ -228,7 +185,7 @@ class BPFormHelper
         if ($result && !empty($client_email)) {
             $intro = $this->params->get('intro');
             $intro = empty(trim(strip_tags($intro))) ? Text::_('MOD_BPFORM_DEFAULT_INTRO_EMAIL_VISITOR') : $intro;
-            $body  = $this->prepareBody($intro, $table);
+            $body           = $this->prepareBody($intro, $renderedFormValues);
 
             // Set reply too so user can answer the copy
             $reply_to = '';
@@ -254,7 +211,7 @@ class BPFormHelper
             }
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
-            if (!$this->sendEmail($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
+            if (!$this->mailStorage->store($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
                 $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
                 $result = false;
             }
@@ -279,24 +236,38 @@ class BPFormHelper
      * @throws RuntimeException
      * @throws Exception
      */
-    protected function prepareAndValidateData(array $input): array
+    protected function prepareData(array $input): array
     {
 
         // Validate each field input
+        /**
+         * @var FieldPrototype[] $fields
+         */
         $fields = $this->getFields($input);
-
         $data = [];
 
         // Check client IP Address against the black list
-        if (!$this->spamHelper->clientInBlacklist()) {
+        if (!$this->spamValidator->clientInBlacklist()) {
             if ($this->user->authorise('core.admin')) {
-                $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_IP_BLACKLIST_ERROR_S',
-                    $this->spamHelper->getClientIp()), 'warning');
+                throw new BlackListException(SpamValidator::getClientIp());
             }
 
             // Invalidate data to stop message from being sent
-            return [false];
+            throw new BlackListException();
         }
+
+        $data = $this->processDataList($fields, $data, $input);
+
+        // If captcha is enabled, validate it
+        if (($this->spamValidator::isCaptchaEnabled($this->params) !== false) && !$this->spamValidator->validateCaptcha()) {
+            throw new CaptchaException();
+        }
+
+        return $data;
+    }
+
+    protected function processDataList(array &$fields, array $data, array &$input): array
+    {
 
         // Process each field
         foreach ($fields as $name => $field) {
@@ -311,7 +282,7 @@ class BPFormHelper
                 $files = $this->prepareFiles($input[$name]);
 
                 // Process and validate each file
-                $errors = $this->validateFiles($files, $field);
+                $errors = $this->formValidator->validateFiles($files, $field);
 
                 // If all files in this field are ok, set them
                 if (empty($errors)) {
@@ -342,6 +313,8 @@ class BPFormHelper
                 // This field was set, so map it to data array using field name
                 if (array_key_exists($name, $input)) {
                     $data = array_merge($data, [$name => $data_record]);
+                } else {
+                    $data = array_merge($data, [$name => $data_record]);
                 }
 
                 // This is a checkbox so change value
@@ -357,18 +330,25 @@ class BPFormHelper
                     }
 
                     $data[$name] = $data_record;
+                } elseif ($field->type === 'group') {
+
+                    $input[$name]           = '';
+                    $data_record->value     = '';
+                    $data_record->subfields = $this->processDataList($field->subfields, [], $input);
+                    $data[$name] = $data_record;
                 }
             }
 
             // If this field is required and its blank
-            if ($field->required && (!array_key_exists($name, $input) || empty($input[$name]))) {
+            if ($field->required && !in_array($field->type, ['group', 'heading', 'html']) && (!array_key_exists($name,
+                        $input) || empty($input[$name]))) {
                 $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
             }
 
             // Check field value for forbidden words
             $filterValue = is_array($value) ? json_encode($value) : (string)$value;
-            if (!$this->spamHelper->filterText((string)$filterValue)) {
+            if (!$this->spamValidator->filterText((string)$filterValue)) {
                 $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
                 if ($this->user->authorise('core.admin')) {
                     $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_SPAM_BLACKLIST_ERROR_S', $field->title),
@@ -377,12 +357,6 @@ class BPFormHelper
                 }
                 $data[$name] = false;
             }
-        }
-
-        // If captcha is enabled, validate it
-        if (($this->isCaptchaEnabled() !== false) && !$this->validateCaptcha()) {
-            $data['captcha'] = false;
-            $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
         }
 
         return $data;
@@ -405,147 +379,182 @@ class BPFormHelper
         // If fields was not processed yet
         if (is_null($this->fields) || $forceUpdate) {
 
-            $fields_params = (array)$this->params->get('fields', []);
-            $this->fields  = [];
-
-            foreach ($fields_params as $field) {
-                /**
-                 * @var FormFieldPrototype $field
-                 */
-
-                // Default field value
-                $field->value = array_key_exists($field->name, $input) ? $input[$field->name] : '';
-
-                // Create field instance
-                if (in_array($field->type, ['heading', 'html'])) {
-                    $field->instance = FormHelper::loadFieldType('hidden');
-                } elseif ($field->type === 'recipient') {
-                    $field->instance = FormHelper::loadFieldType('list');
-                } else {
-                    $field->instance = FormHelper::loadFieldType($field->type);
-                }
-
-                // Set form object to silence the Joomla API
-                $field->instance->setForm($form);
-
-                // Setup XML field element
-                switch ($field->type) {
-                    case 'text':
-                        $field->element = new SimpleXMLElement('<field type="text" />');
-                        break;
-                    case 'email':
-                        $field->element = new SimpleXMLElement('<field type="email" />');
-                        break;
-                    case 'calendar':
-                        $field->element = new SimpleXMLElement('<field type="calendar" />');
-
-                        if (empty($field->calendarformat)) {
-                            $field->calendarformat = '%Y-%m-%d';
-                        }
-                        if ($field->calendarhours) {
-                            if (stripos($field->calendarformat, '%H') === false && stripos($field->calendarformat,
-                                    '%M') === false && stripos($field->calendarformat, '%S') === false) {
-                                $field->calendarformat .= ' %H:%M';
-                            }
-                            $field->element->addAttribute('showtime', 'true');
-                            $field->element->addAttribute('timeformat', $field->calendarhours);
-                        }
-                        $field->element->addAttribute('format', $field->calendarformat);
-                        $field->element->addAttribute('singleheader', 'true');
-                        break;
-                    case 'tel':
-                        $field->element = new SimpleXMLElement('<field type="tel" />');
-                        break;
-                    case 'file':
-                        $field->element = new SimpleXMLElement('<field type="file" />');
-                        if ($field->multiplefiles) {
-                            $field->element->addAttribute('multiple', 'true');
-                        }
-                        if (!empty($field->mimeaccept)) {
-                            $field->element->addAttribute('accept', $field->mimeaccept);
-                        }
-                        break;
-                    case 'list':
-                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
-                        $xml            = '<field type="list">';
-                        $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
-                        $xml            .= '</field>';
-                        $field->value   = implode(',', $field->value);
-                        $field->element = new SimpleXMLElement($xml);
-                        break;
-                    case 'recipient':
-                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
-                        $xml            = '<field type="list">';
-                        $xml            .= $this->prepareRecipientXMLOptions($field, $field->value);
-                        $xml            .= '</field>';
-                        $field->value   = implode(',', $field->value);
-                        $field->element = new SimpleXMLElement($xml);
-                        $field->element->addAttribute('required', 'required');
-                        break;
-                    case 'radio':
-                        $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
-                        $xml            = '<field type="radio">';
-                        $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
-                        $xml            .= '</field>';
-                        $field->value   = implode(',', $field->value);
-                        $field->element = new SimpleXMLElement($xml);
-                        break;
-                    case 'checkboxes':
-                        $xml            = '<field type="checkboxes">';
-                        $xml            .= $this->prepareFieldXMLOptions($field,
-                            $this->getOptionsFieldValue($field, (array)$field->value));
-                        $xml            .= '</field>';
-                        $field->element = new SimpleXMLElement($xml);
-                        break;
-                    case 'textarea':
-                        $field->element = new SimpleXMLElement('<field type="textarea" />');
-                        break;
-                    case 'heading':
-                    case 'html':
-                        $field->element = new SimpleXMLElement('<field type="hidden" />');
-                        break;
-                    case 'checkbox':
-                        $field->element = new SimpleXMLElement('<field type="checkbox" />');
-                        if ($field->checked) {
-                            $field->element->addAttribute('checked', 'true');
-                        }
-                        break;
-                }
-
-                // Set field hint if present
-                if (isset($field->element) && $field->hint !== '') {
-                    $field->element->addAttribute('hint', $field->hint);
-                }
-
-                // Finishing parameters
-                if (isset($field->instance, $field->element)) {
-
-                    // If labels are disabled and a default placeholder was not set
-                    if (!$show_labels && empty($field->hint) && !in_array($field->type, ['checkbox', 'checkboxes'])) {
-                        $hint = $field->title . ($field->required ? ' *' : '');
-                        $field->element->addAttribute('hint', $hint);
-                    }
-
-                    $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
-                    $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
-
-                    $label_html_clear = isset($field->label_html) ? trim(strip_tags($field->label_html)) : '';
-                    if ($field->type === 'checkbox' && ($field->label_html_enabled ?? false) && !empty($label_html_clear)) {
-                        $field->element->addAttribute('label', $field->label_html);
-                    } else {
-                        $field->element->addAttribute('label', $field->title);
-                    }
-                    if ($field->required) {
-                        $field->element->addAttribute('required', 'true');
-                    }
-                }
-
-                $this->fields = array_merge($this->fields, [$field->name => $field]);
-            }
+            $fieldsParamsArray = (array)$this->params->get('fields', []);
+            $this->fields      = $this->prepareFieldsList($fieldsParamsArray, $input, $form, $show_labels);
         }
 
         return $this->fields;
     }
+
+    protected function prepareFieldsList(array $fields_params, array &$input, Form $form, bool $show_labels): array
+    {
+        $fields = [];
+
+        $isPosted = Factory::getApplication()->input->getMethod() === 'POST';
+
+        foreach ($fields_params as $field) {
+            /**
+             * @var FieldPrototype $field
+             */
+
+            // Default field value
+            $field->value = array_key_exists($field->name, $input) ? $input[$field->name] : '';
+
+            if ($field->type === 'heading') {
+                $field->value = '';
+            } elseif ($field->type === 'html') {
+                $field->value = $field->html;
+            }
+
+            // Create field instance
+            if (in_array($field->type, ['heading', 'html'])) {
+                $field->instance = FormHelper::loadFieldType('hidden');
+            } elseif ($field->type === 'group') {
+                $field->instance = null;
+            } elseif ($field->type === 'recipient') {
+                $field->instance = FormHelper::loadFieldType('list');
+            } else {
+                $field->instance = FormHelper::loadFieldType($field->type);
+            }
+
+            // Set form object to silence the Joomla API
+            if ($field->instance !== null) {
+                $field->instance->setForm($form);
+
+                if ($isPosted) {
+                    $field->instance->setValue($field->value);
+                }
+
+            }
+
+            // Setup XML field element
+            switch ($field->type) {
+                case 'text':
+                    $field->element = new SimpleXMLElement('<field type="text" />');
+                    break;
+                case 'email':
+                    $field->element = new SimpleXMLElement('<field type="email" />');
+                    break;
+                case 'calendar':
+                    $field->element = new SimpleXMLElement('<field type="calendar" />');
+
+                    if (empty($field->calendarformat)) {
+                        $field->calendarformat = '%Y-%m-%d';
+                    }
+                    if ($field->calendarhours) {
+                        if (stripos($field->calendarformat, '%H') === false && stripos($field->calendarformat,
+                                '%M') === false && stripos($field->calendarformat, '%S') === false) {
+                            $field->calendarformat .= ' %H:%M';
+                        }
+                        $field->element->addAttribute('showtime', 'true');
+                        $field->element->addAttribute('timeformat', $field->calendarhours);
+                    }
+                    $field->element->addAttribute('format', $field->calendarformat);
+                    $field->element->addAttribute('singleheader', 'true');
+                    break;
+                case 'tel':
+                    $field->element = new SimpleXMLElement('<field type="tel" />');
+                    break;
+                case 'file':
+                    $field->element = new SimpleXMLElement('<field type="file" />');
+                    if ($field->multiplefiles) {
+                        $field->element->addAttribute('multiple', 'true');
+                    }
+                    if (!empty($field->mimeaccept)) {
+                        $field->element->addAttribute('accept', $field->mimeaccept);
+                    }
+                    break;
+                case 'list':
+                    $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
+                    $xml            = '<field type="list">';
+                    $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
+                    $xml            .= '</field>';
+                    $field->value   = implode(',', $field->value);
+                    $field->element = new SimpleXMLElement($xml);
+                    break;
+                case 'recipient':
+                    $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
+                    $xml            = '<field type="list">';
+                    $xml            .= $this->prepareRecipientXMLOptions($field, $field->value);
+                    $xml            .= '</field>';
+                    $field->value   = implode(',', $field->value);
+                    $field->element = new SimpleXMLElement($xml);
+                    $field->element->addAttribute('required', 'required');
+                    break;
+                case 'radio':
+                    $field->value   = $this->getOptionsFieldValue($field, (array)$field->value);
+                    $xml            = '<field type="radio">';
+                    $xml            .= $this->prepareFieldXMLOptions($field, $field->value);
+                    $xml            .= '</field>';
+                    $field->value   = implode(',', $field->value);
+                    $field->element = new SimpleXMLElement($xml);
+                    break;
+                case 'checkboxes':
+                    $xml            = '<field type="checkboxes">';
+                    $xml            .= $this->prepareFieldXMLOptions($field,
+                        $this->getOptionsFieldValue($field, (array)$field->value));
+                    $xml            .= '</field>';
+                    $field->element = new SimpleXMLElement($xml);
+                    break;
+                case 'textarea':
+                    $field->element = new SimpleXMLElement('<field type="textarea" />');
+                    break;
+                case 'heading':
+                case 'html':
+                    $field->element = new SimpleXMLElement('<field type="hidden" />');
+                    break;
+                case 'group':
+                    $field->element   = null;
+                    $field->subfields = $this->prepareFieldsList((array)$field->subfields, $input, $form, $show_labels);
+                    break;
+                case 'checkbox':
+                    $field->element = new SimpleXMLElement('<field type="checkbox" />');
+                    if ($field->checked) {
+                        $field->element->addAttribute('checked', 'true');
+                    }
+                    break;
+            }
+
+            // Set field hint if present
+            if (isset($field->element) && $field->hint !== '') {
+                $field->element->addAttribute('hint', $field->hint);
+            }
+
+            // Set field description if present
+            if (isset($field->element) && $field->description !== '') {
+                $field->element->addAttribute('description', $field->description);
+            }
+
+            // Finishing parameters
+            if (isset($field->instance, $field->element)) {
+
+                // If labels are disabled and a default placeholder was not set
+                if (!$show_labels && empty($field->hint) && !in_array($field->type, ['checkbox', 'checkboxes'])) {
+                    $hint = $field->title . ($field->required ? ' *' : '');
+                    $field->element->addAttribute('hint', $hint);
+                }
+
+                $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
+                $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
+
+                $label_html_clear = isset($field->label_html) ? trim(strip_tags($field->label_html)) : '';
+                if ($field->type === 'checkbox' && ($field->label_html_enabled ?? false) && !empty($label_html_clear)) {
+                    $field->element->addAttribute('label', $field->label_html);
+                } else {
+                    $field->element->addAttribute('label', $field->title);
+                }
+
+                if ($field->required) {
+                    $field->element->addAttribute('required', 'true');
+                }
+            }
+
+            $fields = array_merge($fields, [$field->name => $field]);
+        }
+
+        return $fields;
+    }
+
 
     /**
      * Get for prefix for current module instance.
@@ -659,147 +668,6 @@ class BPFormHelper
     }
 
     /**
-     * Validate file using is size
-     *
-     * @param   array   $input  Files input array.
-     * @param   object  $field  Field object.
-     *
-     * @return array
-     *
-     * @since 1.2.0
-     */
-    protected function validateFiles(array $input, object $field): array
-    {
-        $errors = [];
-
-        // Calculate files size
-        $totalsize = 0;
-        foreach ($input as $file) {
-            $totalsize += $file['size'];
-            if ((!empty($file['name']) || $field->required) && !$this->validateFile($file, $field)) {
-                $errors[] = Text::sprintf('MOD_BPFORM_INPUT_INVALID_FILE_FORMAT_S', $file['name'], $field->title);
-            }
-        }
-
-        // If files size limit exceeded
-        if ($field->maxtotalfilesize < ($totalsize / 1024 / 1024)) {
-            $errors[] = Text::sprintf('MOD_BPFORM_INPUT_MAXTOTALFILESIZE_EXCEEDED_S', $field->title,
-                $field->maxtotalfilesize);
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Validate input file against field "accept" attribute.
-     *
-     * @param   array   $file   Input file array.
-     * @param   object  $field  Field object
-     *
-     * @return bool
-     */
-    protected function validateFile(array $file, object $field): bool
-    {
-        $result = true;
-
-        // Get types
-        $types = $this->getFileTypes($field->mimeaccept);
-
-        // Check file against each type
-        if (!empty($types)) {
-            $result    = false;
-            $extension = '.' . strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-            foreach ($types as $type) {
-
-                // It is an extension and its on the list
-                if (strpos($type, '.') === 0 && strtolower($type) === $extension) {
-                    $result = true;
-                    break;
-
-                }
-
-                // It is a mime
-                if (strpos($type, '/') !== false && fnmatch($type, $file['type'])) {
-                    $result = true;
-                    break;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Get a list of file types and mimes.
-     *
-     * @param   string  $accept  The content of accept attribute.
-     *
-     * @return array
-     */
-    protected function getFileTypes(string $accept): array
-    {
-        $parts = explode(',', $accept);
-        $parts = array_map("trim", $parts);
-
-        return array_filter($parts);
-    }
-
-    /**
-     * Check if captcha is enabled.
-     *
-     * @param   Registry  $params  Module params.
-     *
-     * @return string|bool    Returns string if captcha is enabled or false if not.
-     *
-     * @throws Exception
-     */
-    public function isCaptchaEnabled()
-    {
-        $plugin = $this->app->get('captcha');
-        if ($this->app->isClient('site')) {
-            $plugin = $this->app->getParams()->get('captcha', $plugin);
-        }
-
-        // Check if captcha is enabled
-        if (empty($plugin) || is_numeric($plugin) || !$this->params->get('captcha', 0)) {
-            return false;
-        }
-
-        return $plugin;
-    }
-
-    /**
-     * Validate captcha response.
-     *
-     * @return bool
-     *
-     * @throws Exception
-     */
-    public function validateCaptcha(): bool
-    {
-        PluginHelper::importPlugin('captcha', $this->isCaptchaEnabled());
-
-        $event = new Event('onCheckAnswer');
-        $event->addArgument('0', $this->app->input->get($this->captcha_field_name));
-        $dispatcher = $this->app->getDispatcher();
-
-        try {
-            $dispatcher->dispatch($event->getName(), $event);
-            $response = $event->getArgument('result');
-
-        } catch (Exception $e) {
-            $response = false;
-
-            if ($this->app->get('debug')) {
-                $this->app->enqueueMessage($e->getMessage(), 'error');
-            }
-        }
-
-        return ($response === true) or ($response === [true]);
-    }
-
-    /**
      * Collect attachments from validated data.
      *
      * @param   array  $data  Validated data.
@@ -827,11 +695,13 @@ class BPFormHelper
      *
      * @return string
      */
-    protected function createTable(array $data): string
+    protected function renderFormValues(array $data): string
     {
         ob_start();
 
-        require ModuleHelper::getLayoutPath('mod_bpform', $this->params->get('layout', 'default') . '_table');
+        $layout = $this->params->get('layout', 'default');
+
+        require ModuleHelper::getLayoutPath('mod_bpform', $layout . '_mail');
 
         return ob_get_clean();
     }
@@ -868,7 +738,7 @@ class BPFormHelper
 
             $contact_id = (int)$this->params->get('recipient_contact');
 
-            if ($contact_id > 0 && $contact->load($contact_id) && !empty($contact->email_to) and $this->isValidEmail($contact->email_to)) {
+            if ($contact_id > 0 && $contact->load($contact_id) && !empty($contact->email_to) && $this->formValidator->isValidEmail($contact->email_to)) {
                 $recipients[] = $contact->email_to;
             }
 
@@ -892,22 +762,9 @@ class BPFormHelper
         }
 
         // Clear recipients from empty strings
-        $recipients = array_filter($recipients);
-
-        return $recipients;
+        return array_filter($recipients);
     }
 
-    /**
-     * Check if this e-mail is valid.
-     *
-     * @param   string  $email  E-mail address to validate.
-     *
-     * @return bool
-     */
-    public function isValidEmail(string $email): bool
-    {
-        return Mail::validateAddress($email, 'php');
-    }
 
     /**
      * Look for e-mail in form fields.
@@ -915,6 +772,7 @@ class BPFormHelper
      * @param   array  $input  Form data.
      *
      * @return string
+     * @throws Exception
      */
     protected function getClientEmail(array $input): string
     {
@@ -926,7 +784,7 @@ class BPFormHelper
             if ($field->type === 'email') {
 
                 if (array_key_exists($field->name,
-                        $input) && !empty($input[$field->name]) && $this->isValidEmail($input[$field->name])) {
+                        $input) && !empty($input[$field->name]) && $this->formValidator->isValidEmail($input[$field->name])) {
                     $email = $input[$field->name];
                     break;
                 }
@@ -937,97 +795,10 @@ class BPFormHelper
     }
 
     /**
-     * Send email form.
-     *
-     * @param   string  $body         E-mail body.
-     * @param   string  $subject      E-mail subject.
-     * @param   array   $recipients   Array of E-mail addresses.
-     * @param   string  $reply_to     Reply-to e-mail address.
-     * @param   string  $sender       Set sender e-mail address.
-     * @param   array   $attachments  A list of message attachments using PHP file array format.
-     *
-     * @return bool
-     *
-     * @throws Exception
-     */
-    protected function sendEmail(
-        string $body,
-        string $subject,
-        array $recipients,
-        string $reply_to = '',
-        string $sender = '',
-        array $attachments = []
-    ): bool {
-
-        // E-mail class instance
-        $mail = Factory::getMailer();
-
-        // Add recipients
-        foreach ($recipients as $recipient) {
-            $mail->addRecipient($recipient);
-        }
-
-        // Add sender if exists
-        if (!empty($sender)) {
-            $mail->setSender($sender);
-        }
-
-        // Add reply to if exists
-        if (!empty($reply_to)) {
-            $mail->addReplyTo($reply_to);
-        }
-
-        // If there are attachments to add
-        foreach ($attachments as $attachment) {
-            if (is_array($attachment)) {
-                $path     = $attachment['tmp_name'];
-                $filename = $attachment['name'];
-            } else {
-                $path     = $attachment;
-                $filename = pathinfo($attachment, PATHINFO_BASENAME);
-            }
-
-            $mail->addAttachment($path, $filename);
-        }
-
-        // Set body
-        $mail->setBody($body);
-        $mail->isHtml();
-
-        // Set subject
-        $mail->setSubject($subject);
-
-        // Send the email
-        $result = false;
-        try {
-            $result = $mail->Send();
-        } catch (Exception $e) {
-            $app = Factory::getApplication();
-            $app->enqueueMessage($e->getMessage(), 'danger');
-        }
-
-        $result = is_bool($result) ? $result : false;
-
-        return $result;
-    }
-
-    /**
-     * Prepare message body
-     *
-     * @param   string  $intro  Message intro.
-     * @param   string  $table  Message data table.
-     *
-     * @return string
-     */
-    protected function prepareBody(string $intro, string $table): string
-    {
-        return $intro . $table;
-    }
-
-    /**
      * Check if form build by this module has file type fields.
      *
      * @return bool
+     * @throws Exception
      */
     public function hasFilesUpload(): bool
     {
@@ -1048,38 +819,26 @@ class BPFormHelper
     }
 
     /**
-     * Return captcha code
+     * Prepare message body
+     *
+     * @param   string  $intro  Message intro.
+     * @param   string  $table  Message data table.
      *
      * @return string
-     *
-     * @throws Exception
      */
-    public function getCaptcha(): string
+    protected function prepareBody(string $intro, string $table): string
     {
+        return $intro . $table;
+    }
 
-        // Application instance
-        $app = Factory::getApplication();
+    public function getSpamValidator(): SpamValidator
+    {
+        return $this->spamValidator;
+    }
 
-        // Get captcha plugin
-        $plugin = $this->isCaptchaEnabled($this->params);
-        if ($plugin === false) {
-            return '';
-        }
-
-        // Prepare namespace
-        $namespace = "mod_bpform.{$this->module->id}.captcha";
-
-        // Try to create captcha field
-        try {
-            // Get an instance of the captcha class that we are using
-            $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
-
-            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $this->module->id);
-        } catch (RuntimeException $e) {
-            $app->enqueueMessage($e->getMessage(), 'error');
-
-            return '';
-        }
+    public function getFormValidator(): FormValidator
+    {
+        return $this->formValidator;
     }
 
 }

@@ -11,9 +11,11 @@
 namespace BPExtensions\Module\BPForm\Site\Dispatcher;
 
 use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
+use BPExtensions\Module\BPForm\Site\Validator\FilesValidator;
 use Exception;
 use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Dispatcher\AbstractModuleDispatcher;
+use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\HelperFactoryAwareInterface;
 use Joomla\CMS\Helper\HelperFactoryAwareTrait;
 use Joomla\CMS\Language\Text;
@@ -74,11 +76,10 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $data['input']           = $app->input->post;
         $data['helper']          = $helper;
         $data['inputFiles']      = $app->input->files;
-        $files                   = $data['inputFiles']->get($data['formPrefix'], [], 'array');
-        $files                   = BPFormHelper::filterFiles($files);
+        $files = FilesValidator::filterFiles($data['inputFiles']->get($data['formPrefix'], [], 'array'));
         $data['values']          = $data['input']->get($data['formPrefix'], [], 'array');
         $data['values']          = array_merge($data['values'], $files);
-        $data['captchaEnabled']  = $helper->isCaptchaEnabled() !== false;
+        $data['captchaEnabled'] = $helper->getSpamValidator()->isCaptchaEnabled($data['params']) !== false;
         $data['fields']          = $helper->getFields($data['values']);
         $data['layout']          = $data['params']->get('layout', '');
 
@@ -96,9 +97,10 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         // Prepare and get layout data
         $data = $this->getLayoutData();
         $this->loadLanguage();
+        $inputMethod = Factory::getApplication()->input->getMethod();
 
         try {
-            if ($data['helper']->processForm($data['values']) === true) {
+            if ($inputMethod === 'POST' && $data['helper']->submit($data['values']) === true) {
                 $this->data['fields'] = $data['helper']->getFields([], true);
                 $data['app']->redirect(Uri::current(), 302);
                 $data['app']->close();
@@ -115,4 +117,5 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         // Process form input
         parent::dispatch();
     }
+
 }

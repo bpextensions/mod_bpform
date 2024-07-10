@@ -12,7 +12,9 @@ namespace BPExtensions\Module\BPForm\Site\Form\Field;
 
 defined('JPATH_PLATFORM') or die;
 
+use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
+use Joomla\CMS\Document\HtmlDocument;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormField;
 use Joomla\CMS\Language\Text;
@@ -101,6 +103,8 @@ class BPDonateField extends FormField
      */
     protected function getInput(): string
     {
+        // Add UI fixed for administration side
+        $this->fixFormJavaScript();
 
         // Show popup if needed
         $app     = Factory::getApplication();
@@ -111,10 +115,45 @@ class BPDonateField extends FormField
             $app->enqueueMessage($this->getDonateMessage(), CMSApplicationInterface::MSG_WARNING);
 
             // Disable popup in this session
-            $session->Set(static::SESSION_VAR_NAME, true);
+            $session->set(static::SESSION_VAR_NAME, true);
         }
 
         return '';
+    }
+
+    protected function fixFormJavaScript(): void
+    {
+        /**
+         * @var HtmlDocument   $doc
+         * @var CMSApplication $app
+         */
+        $app = Factory::getApplication();
+        $doc = $app->getDocument();
+
+        $app->getDispatcher()->addListener('onBeforeRender', function () use ($doc) {
+
+            $optionsKey = 'plg_editor_tinymce';
+            $options    = $doc->getScriptOptions($optionsKey);
+
+            if (array_key_exists('tinyMCE', $options) && !empty($options['tinyMCE'])) {
+                foreach (array_keys($options['tinyMCE']) as $editor) {
+                    $options['tinyMCE'][$editor]['toolbar_sticky'] = false;
+                    $options['tinyMCE'][$editor]['tooblar_mode']   = 'wrap';
+                }
+            } else {
+                $options['tinyMCE'] = [
+                    'default' => [
+                        'toolbar_sticky' => false,
+                        'tooblar_mode'   => 'wrap',
+                    ]
+                ];
+            }
+
+            $doc->addScriptOptions($optionsKey, $options);
+
+
+        }, 999);
+
     }
 
     /**

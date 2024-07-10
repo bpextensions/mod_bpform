@@ -8,29 +8,30 @@
  * @license     ${license.name}; see ${license.url}
  */
 
-use BPExtensions\Module\BPForm\Site\Helper\FormFieldPrototype;
+use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
 use Joomla\CMS\Factory;
 
 defined('_JEXEC') or die;
 
 /**
- * @var FormFieldPrototype $field       Field type.
- * @var bool               $show_labels Show field labels?
+ * @var FieldPrototype $field       Field type.
+ * @var bool           $show_labels Show field labels?
  */
 
 if ($field->type === 'heading') {
     $level = strtolower($field->heading_level);
-    echo "<$level>{$field->title}</$level>";
+    echo "<div class=\"col-12\">";
+    echo "<$level class=\"col-12\">{$field->title}</$level>";
+    echo "</div>";
 
     return;
 }
 
 if ($field->type === 'html') {
-    echo "<div class=\"html-field-content\">{$field->html}</div>";
+    echo "<div class=\"col-12 html-field-content\">{$field->html}</div>";
 
     return;
 }
-
 
 $field->instance->setup($field->element, $field->value);
 $field->instance->setDatabase(Factory::getContainer()->get('DatabaseDriver'));
@@ -40,5 +41,7 @@ $renderOptions = [];
 if (!$show_labels && !in_array($field->type, ['checkbox', 'checkboxes'])) {
     $renderOptions['hiddenLabel'] = true;
 }
+
+$renderOptions['class'] = 'col-12 col-lg-' . $field->columns;
 
 echo $field->instance->renderField($renderOptions);

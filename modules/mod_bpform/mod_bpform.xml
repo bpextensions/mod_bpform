@@ -61,7 +61,6 @@
                         label="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_RECIPIENT_EMAILS_DESC"
                         multiple="true"
-                        min="0"
                         validate="Recipients"
                 >
                     <form>
@@ -110,7 +109,7 @@
                     <option value="0">JNO</option>
                     <option value="1">JYES</option>
                 </field>
-                <field name="fields" type="subform" required="true" min="1"
+                <field name="fields" type="subform" required="true"
                        formsource="modules/mod_bpform/forms/fields.xml"
                        multiple="true"
                        label="MOD_BPFORM_FIELD_FIELDS_LABEL"
