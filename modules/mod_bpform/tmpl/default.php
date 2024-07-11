@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @package     ${package}
+ * @subpackage  ${subpackage}
+ *
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
+ * @license     ${license.name}; see ${license.url}
+ */
+
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
 use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
 use Joomla\CMS\Form\Form;
@@ -9,13 +17,6 @@ use Joomla\CMS\Language\Text;
 defined('_JEXEC') or die;
 
 /**
- * @package     ${package}
- * @subpage     ${package}
- *
- * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
- * @license     ${license.name}; see ${license.url}
- * @author      ${author.name}
- *
  * @var string           $formPrefix
  * @var string           $moduleclass_sfx
  * @var BPFormHelper     $helper

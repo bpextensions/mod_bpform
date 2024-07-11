@@ -4,7 +4,7 @@
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  */
 
@@ -21,7 +21,7 @@ defined('_JEXEC') or die;
 if ($field->type === 'heading') {
     $level = strtolower($field->heading_level);
     echo "<div class=\"col-12\">";
-    echo "<$level class=\"col-12\">{$field->title}</$level>";
+    echo "<$level class=\"\">{$field->title}</$level>";
     echo "</div>";
 
     return;

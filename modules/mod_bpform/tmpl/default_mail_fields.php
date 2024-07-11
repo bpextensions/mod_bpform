@@ -1,11 +1,11 @@
 <?php
 
 /**
- * @package     BPExtensions.Module
- * @subpackage  BPForm
+ * @package     ${package}
+ * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) 2024 Grupa Best Sp. z o.o., All rights reserved.
- * @license     GNU GPL 3.0; see https://www.gnu.org/licenses/gpl-3.0.txt
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
+ * @license     ${license.name}; see ${license.url}
  */
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;

@@ -1,21 +1,14 @@
 <?php
-/*
- * @package     ${package}
- * @subpackage  ${subpackage}
- *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
- * @license     ${license.name}; see ${license.url}
- */
-
-namespace BPExtensions\Module\BPForm\Site\Entity;
 
 /**
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  */
+
+namespace BPExtensions\Module\BPForm\Site\Entity;
 
 use Joomla\CMS\Form\FormField;
 use SimpleXMLElement;

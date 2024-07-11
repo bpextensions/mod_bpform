@@ -1,14 +1,14 @@
 <?php
 
-namespace BPExtensions\Module\BPForm\Site\Form\Rule;
-
-/*
+/**
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  */
+
+namespace BPExtensions\Module\BPForm\Site\Form\Rule;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;

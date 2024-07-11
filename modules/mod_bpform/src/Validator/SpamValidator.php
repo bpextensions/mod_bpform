@@ -1,10 +1,10 @@
 <?php
 
-/*
+/**
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  */
 
@@ -262,8 +262,9 @@ class SpamValidator
     {
 
         // Get captcha plugin
-        $plugin = self::isCaptchaEnabled($this->params);
-        if ($plugin === false) {
+        $enabled = self::isCaptchaEnabled($this->params);
+        $plugin  = self::getCaptchaName();
+        if (!$enabled) {
             return '';
         }
 
@@ -273,10 +274,11 @@ class SpamValidator
 
         // Try to create captcha field
         try {
+
             // Get an instance of the captcha class that we are using
             $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
 
-            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $module_id);
+            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $module_id) ?? '';
         } catch (RuntimeException $e) {
             $this->app->enqueueMessage($e->getMessage(), 'error');
 

@@ -2,20 +2,21 @@
 
 /**
  * @package     ${package}
+ * @subpackage  ${subpackage}
  *
  * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
- * @author      ${author.name}
  */
 
 namespace BPExtensions\Module\BPForm\Site\Helper;
 
-use BlackListException;
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
+use BPExtensions\Module\BPForm\Site\Exception\BlackListException;
+use BPExtensions\Module\BPForm\Site\Exception\CaptchaException;
+use BPExtensions\Module\BPForm\Site\Exception\NoRecipientsException;
 use BPExtensions\Module\BPForm\Site\Storage\MailStorage;
 use BPExtensions\Module\BPForm\Site\Validator\FormValidator;
 use BPExtensions\Module\BPForm\Site\Validator\SpamValidator;
-use CaptchaException;
 use Exception;
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Factory;
@@ -28,7 +29,6 @@ use Joomla\CMS\User\User;
 use Joomla\Component\Contact\Administrator\Table\ContactTable;
 use Joomla\Event\DispatcherAwareTrait;
 use Joomla\Registry\Registry;
-use NoRecipientsException;
 use RuntimeException;
 use SimpleXMLElement;
 

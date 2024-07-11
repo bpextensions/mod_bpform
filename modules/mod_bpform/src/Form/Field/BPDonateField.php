@@ -1,14 +1,14 @@
 <?php
 
-namespace BPExtensions\Module\BPForm\Site\Form\Field;
-
 /**
  * @package     ${package}
  * @subpackage  ${subpackage}
  *
- * @copyright   Copyright (C) ${build.year} ${copyrights}, All rights reserved.
+ * @copyright   Copyright (C) ${build.year} ${copyrights},  All rights reserved.
  * @license     ${license.name}; see ${license.url}
  */
+
+namespace BPExtensions\Module\BPForm\Site\Form\Field;
 
 defined('JPATH_PLATFORM') or die;
 
@@ -84,7 +84,7 @@ class BPDonateField extends FormField
         $result = parent::setup($element, $value, $group);
 
         if ($result === true) {
-            $this->url         = $this->element['url'] ?? '${donate.url}';
+            $this->url = $this->element['url'] ?? 'https://bpextensions.com/donate';
             $this->button_text = Text::_($this->element['button_text'] ?? 'BPEXTENSIONS_BUTTON_DONATE_TEXT');
             $this->intro_text  = Text::_($this->element['intro_text'] ?? 'BPEXTENSIONS_DONATE_INTRO_TEXT');
         }
