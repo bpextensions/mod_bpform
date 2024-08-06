@@ -1,4 +1,4 @@
-name: PHP 7.2-8.0
+name: PHP 7.4-8.x
 
 on:
   push:
@@ -15,11 +15,11 @@ jobs:
       - name: Composer Installation
         uses: php-actions/composer@v5
 
-      - name: PHP 7.2+ Compatibility
-        id: php72
+      - name: PHP 7.4+ Compatibility
+        id: php74
         uses: php-actions/composer@v5
         with:
-          command: "test:compatibility:php72"
+          command: "test:compatibility:php74"
 
       - name: PHP 8.0+ Compatibility
         id: php80

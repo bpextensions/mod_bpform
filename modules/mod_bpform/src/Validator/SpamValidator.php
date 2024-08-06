@@ -13,12 +13,13 @@ namespace BPExtensions\Module\BPForm\Site\Validator;
 use Exception;
 use Joomla\Application\ApplicationInterface;
 use Joomla\CMS\Application\CMSApplication;
-use Joomla\CMS\Captcha\Captcha;
+use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Plugin\PluginHelper;
-use Joomla\Event\Event;
+use Joomla\CMS\Form\Field\CaptchaField;
+use Joomla\CMS\Form\Form;
 use Joomla\Registry\Registry;
 use RuntimeException;
+use SimpleXMLElement;
 
 /**
  * Validate input data against SPAM rules.
@@ -66,7 +67,7 @@ class SpamValidator
      *
      * @var string
      */
-    protected $captcha_field_name;
+    public const CAPTCHA_FIELD_NAME = 'captcha';
 
     protected $config;
 
@@ -90,7 +91,6 @@ class SpamValidator
         $this->ip_blacklist = array_filter($this->ip_blacklist);
 
         $this->config             = $config;
-        $this->captcha_field_name = $config['formPrefix'] . '_captcha';
     }
 
     /**
@@ -177,6 +177,34 @@ class SpamValidator
         return $ip === $range;
     }
 
+    protected function getCaptchaFieldInstance(string $value = ''): CaptchaField
+    {
+        $module_id = $this->config['module']->id;
+        $namespace = "modbpform{$module_id}";
+
+        /**
+         * @var CaptchaField $field
+         */
+        $form = new Form($namespace, ['control' => $namespace]);
+
+        $xml = new SimpleXMLElement('<form><field name="' . self::CAPTCHA_FIELD_NAME . '" type="captcha" /></form>');
+        $form->load($xml);
+
+        $form->setFieldAttribute(self::CAPTCHA_FIELD_NAME, 'namespace', $namespace);
+        $form->setFieldAttribute(self::CAPTCHA_FIELD_NAME, 'validate', 'captcha');
+
+        if (!empty($value)) {
+            $form->setValue(self::CAPTCHA_FIELD_NAME, null, $value);
+        }
+
+        /**
+         * @var CaptchaField $field
+         */
+        $field = $form->getField(self::CAPTCHA_FIELD_NAME);
+
+        return $field;
+    }
+
     /**
      * Get the result of spam tests.
      *
@@ -224,31 +252,37 @@ class SpamValidator
     /**
      * Validate captcha response.
      *
+     * @param   array  $input
+     *
      * @return bool
      *
      * @throws Exception
      */
-    public function validateCaptcha(): bool
+    public function validateCaptcha(array $input = []): bool
     {
-        PluginHelper::importPlugin('captcha', self::isCaptchaEnabled($this->params));
+        $plugin = self::getCaptchaName();
 
-        $event = new Event('onCheckAnswer');
-        $event->addArgument('0', $this->app->input->get($this->captcha_field_name));
-        $dispatcher = $this->app->getDispatcher();
+        // No captcha or captcha is disabled for this form
+        if (!self::isCaptchaEnabled($this->params) || empty($plugin) || (is_numeric($plugin))) {
+            return true;
+        }
 
         try {
-            $dispatcher->dispatch($event->getName(), $event);
-            $response = $event->getArgument('result');
+
+            $value = $input[self::CAPTCHA_FIELD_NAME] ?? '';
+            $field = $this->getCaptchaFieldInstance($value);
+
+            return true === $field->validate($value, null, new Registry($input));
 
         } catch (Exception $e) {
             $response = false;
 
             if ($this->app->get('debug')) {
-                $this->app->enqueueMessage($e->getMessage(), 'error');
+                $this->app->enqueueMessage($e->getMessage(), CMSApplicationInterface::MSG_ERROR);
             }
         }
 
-        return ($response === true) or ($response === [true]);
+        return ($response === true) || ($response === [true]);
     }
 
     /**
@@ -261,26 +295,18 @@ class SpamValidator
     public function getCaptcha(): string
     {
 
-        // Get captcha plugin
-        $enabled = self::isCaptchaEnabled($this->params);
-        $plugin  = self::getCaptchaName();
-        if (!$enabled) {
+        // Skip if not enabled
+        if (!self::isCaptchaEnabled($this->params)) {
             return '';
         }
-
-        // Prepare namespace
-        $module_id = $this->config['module']->id;
-        $namespace = "mod_bpform.$module_id.captcha";
 
         // Try to create captcha field
         try {
 
-            // Get an instance of the captcha class that we are using
-            $captcha = Captcha::getInstance($plugin, ['namespace' => $namespace]);
+            return $this->getCaptchaFieldInstance()->renderField();
 
-            return $captcha->display($this->captcha_field_name, 'mod_bpform_captcha_' . $module_id) ?? '';
         } catch (RuntimeException $e) {
-            $this->app->enqueueMessage($e->getMessage(), 'error');
+            $this->app->enqueueMessage($e->getMessage(), CMSApplicationInterface::MSG_ERROR);
 
             return '';
         }

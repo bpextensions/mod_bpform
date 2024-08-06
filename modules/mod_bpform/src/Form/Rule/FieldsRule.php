@@ -10,6 +10,7 @@
 
 namespace BPExtensions\Module\BPForm\Site\Form\Rule;
 
+use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormRule;
@@ -64,7 +65,7 @@ final class FieldsRule extends FormRule
         foreach ($duplicates as $field_name => $labels) {
             Factory::getApplication()->enqueueMessage(
                 Text::sprintf('MOD_BPFORM_BASIC_FIELD_NAME_DUPLICATE_S', implode(', ', $labels), $field_name),
-                'warning'
+                CMSApplicationInterface::MSG_WARNING
             );
         }
 

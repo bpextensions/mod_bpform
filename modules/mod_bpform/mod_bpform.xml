@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade">
     <name>mod_bpform</name>
-    <author>Grupa Best Sp. z o.o.</author>
-    <creationDate>July 2024</creationDate>
-    <copyright>Copyright (C) 2024 Grupa Best Sp. z o.o.. All rights reserved.</copyright>
-    <license>GNU GPL 3.0, see https://www.gnu.org/licenses/gpl-3.0.txt</license>
-    <authorEmail>contact@bpextensions.com</authorEmail>
-    <authorUrl>https://bpextensions.com</authorUrl>
-    <version>2.0.1</version>
+    <author>${author.name}</author>
+    <creationDate>${build.date}</creationDate>
+    <copyright>${copyrights} All rights reserved.</copyright>
+    <license>${license.name}, ${license.url}</license>
+    <authorEmail>${author.email}</authorEmail>
+    <authorUrl>${author.url}</authorUrl>
+    <version>${build.version}</version>
     <description>MOD_BPFORM_XML_DESCRIPTION</description>
 
     <namespace path="src">BPExtensions\Module\BPForm</namespace>

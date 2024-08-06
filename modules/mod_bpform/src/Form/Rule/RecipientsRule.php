@@ -8,6 +8,8 @@
  * @license     ${license.name}; see ${license.url}
  */
 
+namespace BPExtensions\Module\BPForm\Site\Form\Rule;
+
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormRule;
 use Joomla\Registry\Registry;

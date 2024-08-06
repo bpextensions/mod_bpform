@@ -10,6 +10,7 @@
 
 namespace BPExtensions\Module\BPForm\Site\Dispatcher;
 
+use BPExtensions\Module\BPForm\Site\Exception\CaptchaException;
 use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
 use BPExtensions\Module\BPForm\Site\Validator\FilesValidator;
 use Exception;
@@ -101,16 +102,17 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
 
         try {
             if ($inputMethod === 'POST' && $data['helper']->submit($data['values']) === true) {
-                $this->data['fields'] = $data['helper']->getFields([], true);
                 $data['app']->redirect(Uri::current(), 302);
                 $data['app']->close();
             }
         } catch (Exception $e) {
             if ($data['app']->get('debug', false)) {
                 $data['app']->enqueueMessage($e->getMessage(), CMSApplicationInterface::MSG_ERROR);
+            } elseif ($e instanceof CaptchaException) {
+                $data['app']->enqueueMessage($e->getMessage(), CMSApplicationInterface::MSG_WARNING);
             } else {
                 $data['app']->enqueueMessage(Text::_('MOD_BPFORM_EXCEPTION_DEFAULT'),
-                    CMSApplicationInterface::MSG_INFO);
+                    CMSApplicationInterface::MSG_WARNING);
             }
         }
 

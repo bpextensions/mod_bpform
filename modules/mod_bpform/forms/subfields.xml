@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form>
 
-    <field name="title" type="text" required="true"
-           label="MOD_BPFORM_FIELD_FIELDS_TITLE_LABEL"
-           description="MOD_BPFORM_FIELD_FIELDS_TITLE_DESC"/>
-
-    <field name="name" type="text" required="true" filter="ALNUM"
-           pattern="[\w\-]+"
-           class="bpform-field-alias"
-           label="MOD_BPFORM_FIELD_FIELDS_NAME_LABEL"
-           description="MOD_BPFORM_FIELD_FIELDS_NAME_DESC"/>
-
     <field name="type" type="list" required="true" default="text"
            label="MOD_BPFORM_FIELD_FIELDS_TYPE_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_TYPE_DESC"
@@ -30,6 +20,16 @@
         <option value="html">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HTML</option>
         <option value="heading">MOD_BPFORM_FIELD_FIELDS_TYPE_OPTION_HEADING</option>
     </field>
+
+    <field name="title" type="text" required="true"
+           label="MOD_BPFORM_FIELD_FIELDS_TITLE_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_TITLE_DESC"/>
+
+    <field name="name" type="text" required="true" filter="ALNUM"
+           pattern="[\w\-]+"
+           class="bpform-field-alias"
+           label="MOD_BPFORM_FIELD_FIELDS_NAME_LABEL"
+           description="MOD_BPFORM_FIELD_FIELDS_NAME_DESC"/>
 
     <field name="required" type="radio"
            default="0" showon="type!:html,heading,recipient,group"

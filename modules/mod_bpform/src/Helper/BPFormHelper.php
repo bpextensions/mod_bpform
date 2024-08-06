@@ -19,6 +19,7 @@ use BPExtensions\Module\BPForm\Site\Validator\FormValidator;
 use BPExtensions\Module\BPForm\Site\Validator\SpamValidator;
 use Exception;
 use Joomla\CMS\Application\CMSApplication;
+use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormHelper;
@@ -160,7 +161,7 @@ class BPFormHelper
         $subject = $this->params->get('admin_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_ADMIN'));
 
         // Look for client email and set a reply to field on the admin email
-        $client_email        = $this->getClientEmail($input);
+        $client_email = $this->getClientEmail($input, $this->getFields($input));
         $visitor_sender_mode = (int)$this->params->get('visitor_sender_mode', 1);
         $admin_sender_mode   = (int)$this->params->get('admin_sender_mode', 1);
         $reply_to            = '';
@@ -177,14 +178,14 @@ class BPFormHelper
 
         // If we failed to send the message to administrator
         if (!$this->mailStorage->store($renderedFormValues, $subject, $recipients, $reply_to, $sender, $attachments)) {
-            $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
+            $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), CMSApplicationInterface::MSG_ERROR);
             $result = false;
         }
 
         // Send a copy email to client if there is an email address in form
         if ($result && !empty($client_email)) {
             $intro = $this->params->get('intro');
-            $intro = empty(trim(strip_tags($intro))) ? Text::_('MOD_BPFORM_DEFAULT_INTRO_EMAIL_VISITOR') : $intro;
+            $intro    = empty(trim(strip_tags($intro))) ? '' : $intro;
             $body           = $this->prepareBody($intro, $renderedFormValues);
 
             // Set reply too so user can answer the copy
@@ -212,7 +213,8 @@ class BPFormHelper
 
             $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
             if (!$this->mailStorage->store($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
-                $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), 'error');
+                $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'),
+                    CMSApplicationInterface::MSG_ERROR);
                 $result = false;
             }
         }
@@ -259,7 +261,7 @@ class BPFormHelper
         $data = $this->processDataList($fields, $data, $input);
 
         // If captcha is enabled, validate it
-        if (($this->spamValidator::isCaptchaEnabled($this->params) !== false) && !$this->spamValidator->validateCaptcha()) {
+        if (($this->spamValidator::isCaptchaEnabled($this->params) !== false) && !$this->spamValidator->validateCaptcha($input)) {
             throw new CaptchaException();
         }
 
@@ -374,7 +376,7 @@ class BPFormHelper
     public function getFields(array $input = [], bool $forceUpdate = false): array
     {
         $show_labels = (bool)$this->params->get('show_labels', 1);
-        $form        = new Form($this->getFormPrefix());
+        $form = new Form($this->getFormPrefix(), ['control' => $this->getFormPrefix()]);
 
         // If fields was not processed yet
         if (is_null($this->fields) || $forceUpdate) {
@@ -534,8 +536,7 @@ class BPFormHelper
                     $field->element->addAttribute('hint', $hint);
                 }
 
-                $field->element->addAttribute('name', $this->formPrefix . '[' . $field->name . ']');
-                $field->element->addAttribute('id', $this->formPrefix . '_' . $field->name);
+                $field->element->addAttribute('name', $field->name);
 
                 $label_html_clear = isset($field->label_html) ? trim(strip_tags($field->label_html)) : '';
                 if ($field->type === 'checkbox' && ($field->label_html_enabled ?? false) && !empty($label_html_clear)) {
@@ -774,9 +775,8 @@ class BPFormHelper
      * @return string
      * @throws Exception
      */
-    protected function getClientEmail(array $input): string
+    protected function getClientEmail(array $input, array $fields = []): string
     {
-        $fields = $this->getFields($input);
         $email  = '';
         foreach ($fields as $name => $field) {
 
@@ -788,6 +788,11 @@ class BPFormHelper
                     $email = $input[$field->name];
                     break;
                 }
+            }
+
+            // If this is a group, look inside subfields.
+            if (($field->type === 'group') && $found_mail = $this->getClientEmail($input, $field->subfields ?? [])) {
+                return $found_mail;
             }
         }
 

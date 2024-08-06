@@ -11,7 +11,9 @@
 namespace BPExtensions\Module\BPForm\Site\Storage;
 
 use Exception;
+use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Mail\MailerFactoryInterface;
 
 class MailStorage
 {
@@ -40,7 +42,7 @@ class MailStorage
     ): bool {
 
         // E-mail class instance
-        $mail = Factory::getMailer();
+        $mail = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
 
         // Add recipients
         foreach ($recipients as $recipient) {
@@ -83,7 +85,7 @@ class MailStorage
             $result = $mail->Send();
         } catch (Exception $e) {
             $app = Factory::getApplication();
-            $app->enqueueMessage($e->getMessage(), 'danger');
+            $app->enqueueMessage($e->getMessage(), CMSApplicationInterface::MSG_ERROR);
         }
 
         $result = is_bool($result) ? $result : false;

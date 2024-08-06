@@ -3,7 +3,7 @@
 
     <property file="./build.properties"/>
 
-    <php expression="date('F Y')" returnProperty="build.date"/>
+    <php expression="date('Y-m-d')" returnProperty="build.date"/>
     <php expression="date('Y')" returnProperty="build.year"/>
 
     <target name="test">
@@ -13,7 +13,7 @@
     </target>
 
     <target name="test:compatibility">
-        <echo msg="Testing PHP 7.2 Compatibility"/>
+        <echo msg="Testing PHP 7.4 Compatibility"/>
         <exec command="composer test:compatibility" checkreturn="true"/>
     </target>
 
@@ -53,7 +53,7 @@
         </copy>
 
         <echo msg="Creating module zipfile." />
-        <zip destfile="./.build/mod_bpform_v${build.version}_${build.release}_J4.zip" basedir="./.build/mod_bpform"/>
+        <zip destfile="./.build/mod_bpform_v${build.version}_${build.release}_J5.zip" basedir="./.build/mod_bpform"/>
     </target>
 
     <target name="build">
