@@ -10,12 +10,14 @@
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
 use Joomla\CMS\Factory;
+use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
 
 /**
  * @var FieldPrototype $field       Field type.
  * @var bool           $show_labels Show field labels?
+ * @var Registry $params
  */
 
 if ($field->type === 'heading') {

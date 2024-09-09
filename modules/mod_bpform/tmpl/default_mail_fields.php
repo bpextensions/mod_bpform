@@ -9,11 +9,13 @@
  */
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
+use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
 
 /**
  * @var FieldPrototype $field
+ * @var Registry $params
  */
 
 $value = $field->value;

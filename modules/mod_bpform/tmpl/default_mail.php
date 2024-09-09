@@ -10,12 +10,14 @@
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
 use Joomla\CMS\Helper\ModuleHelper;
+use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
 
 /**
  * @var string $layout
  * @var array  $data
+ * @var Registry $params
  */
 
 

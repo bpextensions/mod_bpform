@@ -13,6 +13,7 @@ use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
+use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
 
@@ -21,6 +22,7 @@ defined('_JEXEC') or die;
  * @var string           $moduleclass_sfx
  * @var BPFormHelper     $helper
  * @var string           $layout
+ * @var Registry $params
  * @var bool             $captchaEnabled
  * @var FieldPrototype[] $fields
  */
@@ -44,14 +46,19 @@ $form = new Form($formPrefix);
             <?php endif ?>
         <?php endforeach ?>
         <?php if ($captchaEnabled): ?>
-            <div class="captcha">
+            <div class="captcha col-12">
                 <?php echo $helper->getSpamValidator()->getCaptcha() ?>
             </div>
         <?php endif ?>
-        <div class="form-actions d-flex justify-content-between mt-3">
-            <button class="btn btn-outline-primary" type="reset">
-                <?php echo Text::_('MOD_BPFORM_BUTTON_RESET_LABEL') ?>
+        <div class="form-actions col-12 d-flex justify-content-end mt-3">
+            <?php if ($params->get('show_reset', false)): ?>
+                <button class="btn btn-outline-primary d-flex align-items-center me-3" type="reset">
+                    <i class="icon-times icon-fw" aria-hidden="true"></i>
+                    <span class="visually-hidden">
+                    <?php echo Text::_('MOD_BPFORM_BUTTON_RESET_LABEL') ?>
+                </span>
             </button>
+            <?php endif ?>
             <button class="btn btn-primary px-5" type="submit">
                 <?php echo Text::_('MOD_BPFORM_BUTTON_SEND_LABEL') ?>
             </button>

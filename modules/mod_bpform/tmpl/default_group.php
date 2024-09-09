@@ -10,6 +10,7 @@
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
 use Joomla\CMS\Helper\ModuleHelper;
+use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
 
@@ -17,6 +18,7 @@ defined('_JEXEC') or die;
  * @var FieldPrototype $group       Group of fields.
  * @var string         $layout
  * @var bool           $show_labels Show field labels?
+ * @var Registry $params
  */
 ?>
 <div class="col-12">
