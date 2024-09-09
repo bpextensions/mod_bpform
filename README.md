@@ -1,8 +1,8 @@
 # BP Form
 
-![PHP 7.2](https://github.com/bpextensions/mod_bpform/workflows/PHP%207.2-8.0/badge.svg)
+![PHP 8.1](https://github.com/bpextensions/mod_bpform/workflows/PHP%208.1/badge.svg)
 
-Simple Joomla! 3 contact form module.
+Simple Joomla! contact form module.
 
 # Features
 
@@ -28,14 +28,14 @@ Simple Joomla! 3 contact form module.
 
 # Requirements
 
-- PHP 7.2+
-- Joomla 3.9.x
+- PHP 8.1+
+- Joomla 5
 
 # How to build from repository
 
 ## Build requirements
 
-- PHP 7.2
+- PHP 8.1+
 - Composer
 - Node/Npm
 
