@@ -18,8 +18,6 @@ use Joomla\DI\ServiceProviderInterface;
 
 /**
  * The BP Form module service provider.
- *
- * @since  1.0.0
  */
 return new class implements ServiceProviderInterface {
 
@@ -29,10 +27,8 @@ return new class implements ServiceProviderInterface {
      * @param   Container  $container  The DI container.
      *
      * @return  void
-     *
-     * @since   1.0.0
      */
-    public function register(Container $container)
+    public function register(Container $container): void
     {
         $container->registerServiceProvider(new ModuleDispatcherFactory('\\BPExtensions\\Module\\BPForm'));
         $container->registerServiceProvider(new HelperFactory('\\BPExtensions\\Module\\BPForm\\Site\\Helper'));
