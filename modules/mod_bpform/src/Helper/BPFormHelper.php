@@ -183,40 +183,8 @@ class BPFormHelper
         }
 
         // Send a copy email to client if there is an email address in form
-        if ($result && !empty($client_email)) {
-            $intro = $this->params->get('intro');
-            $intro    = empty(trim(strip_tags($intro))) ? '' : $intro;
-            $body           = $this->prepareBody($intro, $renderedFormValues);
-
-            // Set reply too so user can answer the copy
-            $reply_to = '';
-            $sender   = '';
-
-            // If visitor sender mode is set to reply_to
-            if ((int)$visitor_sender_mode === 1) {
-                $reply_to = current($recipients);
-
-                // if visitor sender mode is set to Sender
-            } elseif ((int)$visitor_sender_mode === 0) {
-                $sender = current($recipients);
-            }
-
-            // Add message attachments to the confirmation message
-            $replyAttachments = $this->params->get('message_attachments', []);
-            $attachments      = [];
-            foreach ($replyAttachments as $attachment) {
-                $attachmentPath = realpath(JPATH_ROOT . '/' . $attachment->file);
-                if ($attachment->file !== '' && file_exists($attachmentPath)) {
-                    $attachments[] = $attachmentPath;
-                }
-            }
-
-            $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
-            if (!$this->mailStorage->store($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
-                $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'),
-                    CMSApplicationInterface::MSG_ERROR);
-                $result = false;
-            }
+        if ($result && !empty($client_email) && $this->params->get('send_confirmation', true)) {
+            $result = $this->notifyClient($renderedFormValues, $visitor_sender_mode, $recipients, $client_email);
         }
 
         // If everything went fine
@@ -226,6 +194,60 @@ class BPFormHelper
         }
 
         return $result;
+    }
+
+    /**
+     * Notify client about receiving the message.
+     *
+     * @param   string  $renderedFormValues
+     * @param   int     $visitor_sender_mode
+     * @param   array   $recipients
+     * @param   string  $client_email
+     *
+     * @return bool
+     * @throws Exception
+     */
+    protected function notifyClient(
+        string $renderedFormValues,
+        int $visitor_sender_mode,
+        array $recipients,
+        string $client_email
+    ): bool {
+        $intro = $this->params->get('intro');
+        $intro = empty(trim(strip_tags($intro))) ? '' : $intro;
+        $body  = $this->prepareBody($intro, $renderedFormValues);
+
+        // Set reply too so user can answer the copy
+        $reply_to = '';
+        $sender   = '';
+
+        // If visitor sender mode is set to reply_to
+        if ((int)$visitor_sender_mode === 1) {
+            $reply_to = current($recipients);
+
+            // if visitor sender mode is set to Sender
+        } elseif ((int)$visitor_sender_mode === 0) {
+            $sender = current($recipients);
+        }
+
+        // Add message attachments to the confirmation message
+        $replyAttachments = $this->params->get('message_attachments', []);
+        $attachments      = [];
+        foreach ($replyAttachments as $attachment) {
+            $attachmentPath = realpath(JPATH_ROOT . '/' . $attachment->file);
+            if ($attachment->file !== '' && file_exists($attachmentPath)) {
+                $attachments[] = $attachmentPath;
+            }
+        }
+
+        $client_subject = $this->params->get('client_subject', Text::_('MOD_BPFORM_DEFAULT_SUBJECT_EMAIL_VISITOR'));
+        if (!$this->mailStorage->store($body, $client_subject, [$client_email], $reply_to, $sender, $attachments)) {
+            $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), CMSApplicationInterface::MSG_ERROR);
+
+            return false;
+        }
+
+        return true;
     }
 
     /**

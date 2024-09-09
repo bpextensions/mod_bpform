@@ -102,10 +102,19 @@
                       addruleprefix="BPExtensions\Module\BPForm\Site\Form\Rule"
             >
                 <field name="show_labels" type="radio" filter="INT"
-                       default="1" class="btn-group"
+                       layout="joomla.form.field.radio.switcher"
                        label="MOD_BPFORM_FIELD_SHOW_LABELS_LABEL"
                        description="MOD_BPFORM_FIELD_SHOW_LABELS_DESC"
                 >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+                <field name="show_reset" type="radio"
+                       default="0" showon="type!:html,heading,recipient,group"
+                       layout="joomla.form.field.radio.switcher"
+                       label="MOD_BPFORM_FIELD_SHOW_RESET_LABEL"
+                       description="MOD_BPFORM_FIELD_SHOW_RESET_DESC"
+                       filter="INT">
                     <option value="0">JNO</option>
                     <option value="1">JYES</option>
                 </field>
@@ -124,30 +133,43 @@
                         name="message_visitor_note"
                         type="spacer"
                         label="MOD_BPFORM_MESSAGE_VISITOR_NOTE"
-                        class="h2"
+                        class="h3"
                 />
+                <field name="send_confirmation" type="radio"
+                       default="0" showon="type!:html,heading,recipient,group"
+                       layout="joomla.form.field.radio.switcher"
+                       label="MOD_BPFORM_FIELD_SEND_CONFIRMATION_LABEL"
+                       description="MOD_BPFORM_FIELD_SEND_CONFIRMATION_DESC"
+                       filter="INT">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
                 <field
                         name="success_message" type="textarea" rows="3"
                         label="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_DESC"
                         hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"
+                        showon="send_confirmation:1"
                 />
                 <field
                         name="client_subject" type="text"
                         label="MOD_BPFORM_BASIC_FIELD_SUBJECT_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_DESC"
                         hint="MOD_BPFORM_BASIC_FIELD_CLIENT_SUBJECT_HINT"
+                        showon="send_confirmation:1"
                 />
                 <field
                         name="intro" type="editor" rows="3" filter="safehtml" height="250"
                         buttons="false"
                         label="MOD_BPFORM_BASIC_FIELD_INTRO_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_INTRO_DESC"
+                        showon="send_confirmation:1"
                 />
                 <field
                         name="message_attachments" type="subform"
                         label="MOD_BPFORM_BASIC_FIELD_MESSAGE_ATTACHMENTS_LABEL"
                         description="MOD_BPFORM_BASIC_FIELD_MESSAGE_ATTACHMENTS_DESC"
+                        showon="send_confirmation:1"
                         multiple="true"
                         min="0"
                         validate="MessageAttachments"
@@ -169,7 +191,7 @@
                         name="message_admin_note"
                         type="spacer"
                         label="MOD_BPFORM_MESSAGE_ADMIN_NOTE"
-                        class="h2"
+                        class="h3"
                 />
                 <field
                         name="admin_subject" type="text"

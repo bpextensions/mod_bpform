@@ -43,6 +43,7 @@
 
     <field name="required" type="radio"
            default="0" showon="type!:html,heading,recipient,group"
+           layout="joomla.form.field.radio.switcher"
            label="MOD_BPFORM_FIELD_FIELDS_REQUIRED_LABEL"
            description="MOD_BPFORM_FIELD_FIELDS_REQUIRED_DESC"
            filter="INT">
