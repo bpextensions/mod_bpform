@@ -55,6 +55,9 @@ final class FieldsRule extends FormRule
             return false;
         }
 
+        // Load input into the form
+        $form->setValue('fields', 'params', $input);
+
         // Get form fields
         $fields_value = $input->get('params.fields');
         $fields_value = is_object($fields_value) ? (array)$fields_value : [];
@@ -93,6 +96,16 @@ final class FieldsRule extends FormRule
                 $duplicates[$field->name] = [$field->title];
             } else {
                 $duplicates[$field->name][] = $field->title;
+            }
+
+            if ($field->type === 'group') {
+                foreach ($field->subfields as $subfield) {
+                    if (!array_key_exists($subfield->name, $duplicates)) {
+                        $duplicates[$subfield->name] = [$subfield->title];
+                    } else {
+                        $duplicates[$subfield->name][] = $subfield->title;
+                    }
+                }
             }
         }
 
@@ -159,7 +172,8 @@ final class FieldsRule extends FormRule
     /**
      * If the form is using groups, invalidate it if there is a single field outside the groups.
      *
-     * @param   array  $fields_value
+     * @param   array             $fields_value
+     * @param   SimpleXMLElement  $element
      *
      * @return bool
      * @throws Exception
