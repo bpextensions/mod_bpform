@@ -68,8 +68,12 @@ final class FieldsRule extends FormRule
         // If user selected Recipient field, make sure he added some Recipients e-mail addresses
         $result = $result && $this->recipientsProvided($fields_value, $element, $input);
 
-        // If form is using groups, make sure there is no field outside the group
-        $result = $result && $this->checkGroups($fields_value, $element);
+        // If Wizard layout is set, check if all fields are in the group
+        if (str_ends_with($input->get('params.layout', '_:default'), 'wizard')) {
+            $result = $result && $this->checkGroups($fields_value, true);
+        } else {
+            $result = $result && $this->checkGroups($fields_value);
+        }
 
         return $result;
     }
@@ -172,22 +176,23 @@ final class FieldsRule extends FormRule
     /**
      * If the form is using groups, invalidate it if there is a single field outside the groups.
      *
-     * @param   array             $fields_value
-     * @param   SimpleXMLElement  $element
+     * @param   array  $fields_value
+     * @param   bool   $requireGroups
      *
      * @return bool
      * @throws Exception
      */
-    protected function checkGroups(array $fields_value, SimpleXMLElement $element): bool
+    protected function checkGroups(array $fields_value, bool $requireGroups = false): bool
     {
         /**
          * @var CMSApplication $app
          */
         $types = array_column($fields_value, 'type');
+        $unique_types = array_unique($types);
         $app   = Factory::getApplication();
 
-        // If it is a group form
-        if (in_array('group', $types, true) && array_unique($types) !== ['group']) {
+        // If groups are required or there are groups added and there are fields outside the groups
+        if ($unique_types !== ['group'] && ($requireGroups || in_array('group', $unique_types, true))) {
             $fields_outside = [];
 
             // Find fields outside the group
@@ -198,7 +203,12 @@ final class FieldsRule extends FormRule
             }
 
             // Return a proper warning
-            $message = Text::sprintf('MOD_BPFORM_ERROR_OUTSIDE_OF_GROUP_S', implode(', ', $fields_outside));
+            if (!$requireGroups) {
+                $message = Text::sprintf('MOD_BPFORM_ERROR_OUTSIDE_OF_GROUP_S', implode(', ', $fields_outside));
+            } else {
+                $message = Text::sprintf('MOD_BPFORM_ERROR_WIZARD_REQUIRES_GROUPS_S', implode(', ', $fields_outside));
+            }
+
             $app->enqueueMessage($message, CMSApplicationInterface::MSG_ERROR);
 
             return false;
