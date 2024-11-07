@@ -20,6 +20,7 @@ services:
       JOOMLA_ADMIN_PASSWORD: testtesttesttest
     volumes:
       - ./modules/mod_bpform:/var/www/html/modules/mod_bpform
+      - ./.docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
 
   mariadb:
     image: mariadb
