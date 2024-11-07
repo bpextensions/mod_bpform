@@ -77,7 +77,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $data['input']           = $app->input->post;
         $data['helper']          = $helper;
         $data['inputFiles']      = $app->input->files;
-        $files = FilesValidator::filterFiles($data['inputFiles']->get($data['formPrefix'], [], 'array'));
+        $files = FilesValidator::filterFiles($data['inputFiles']->get($data['formPrefix'], []));
         $data['values']          = $data['input']->get($data['formPrefix'], [], 'array');
         $data['values']          = array_merge($data['values'], $files);
         $data['captchaEnabled'] = $helper->getSpamValidator()->isCaptchaEnabled($data['params']) !== false;

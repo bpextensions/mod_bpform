@@ -22,7 +22,10 @@ $value = $field->value;
 
 // Not a file
 if ($field->type !== 'file') {
-    $value = is_array($value) ? '<ul><li>' . implode('</li><li>', $value) . '</li></ul>' : $value;
+    $value = is_array($value) ? '<ul style="margin-bottom:0"><li>' . implode(
+            '</li><li>',
+            $value
+        ) . '</li></ul>' : $value;
 
 // File or files
 } elseif (!empty($value)) {

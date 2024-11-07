@@ -120,6 +120,7 @@ class BPFormHelper
      * Process form input.
      *
      * @param   array  $input  Form input data array.
+     * @param   array  $files  Form input files data array.
      *
      * @return bool|null
      *
@@ -336,8 +337,6 @@ class BPFormHelper
 
                 // This field was set, so map it to data array using field name
                 if (array_key_exists($name, $input)) {
-                    $data = array_merge($data, [$name => $data_record]);
-                } else {
                     $data = array_merge($data, [$name => $data_record]);
                 }
 
@@ -701,10 +700,20 @@ class BPFormHelper
     {
         $attachments = [];
 
+
         // Collect each attachment
         foreach ($data as $name => $entry) {
-            if ($entry->type === 'file' and !empty($entry->value)) {
+            if ($entry->type === 'file' && !empty($entry->value)) {
                 $attachments = array_merge($attachments, $entry->value);
+                continue;
+            }
+
+            if ($entry->type === 'group') {
+                foreach ($entry->subfields as $subfield_name => $subfield_entry) {
+                    if ($subfield_entry->type === 'file' && !empty($subfield_entry->value)) {
+                        $attachments = array_merge($attachments, $subfield_entry->value);
+                    }
+                }
             }
         }
 
@@ -834,11 +843,21 @@ class BPFormHelper
         // Get list of form fields
         $fields = $this->getFields();
 
+
         // Check if form has file type field
         foreach ($fields as $field) {
             if ($field->type === 'file') {
                 $result = true;
                 break;
+            }
+
+            if ($field->type === 'group') {
+                foreach ($field->subfields as $subfield) {
+                    if ($subfield->type === 'file') {
+                        $result = true;
+                        break;
+                    }
+                }
             }
         }
 
