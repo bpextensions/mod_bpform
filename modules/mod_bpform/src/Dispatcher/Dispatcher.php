@@ -43,7 +43,6 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
      * @return  array|bool
      *
      * @throws Exception
-     * @since   4.2.0
      */
     protected function getLayoutData()
     {
