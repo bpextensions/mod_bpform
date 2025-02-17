@@ -14,6 +14,7 @@ use Joomla\CMS\Event\AbstractImmutableEvent;
 
 class StoreMessageEvent extends AbstractImmutableEvent
 {
+    public const NAME = 'bpform.store_message';
 
     public function __construct(string $name, array $arguments = [])
     {
