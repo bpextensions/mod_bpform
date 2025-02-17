@@ -11,6 +11,7 @@
 namespace BPExtensions\Module\BPForm\Site\Helper;
 
 use BPExtensions\Module\BPForm\Site\Entity\FieldPrototype;
+use BPExtensions\Module\BPForm\Site\Event\StoreMessageEvent;
 use BPExtensions\Module\BPForm\Site\Exception\BlackListException;
 use BPExtensions\Module\BPForm\Site\Exception\CaptchaException;
 use BPExtensions\Module\BPForm\Site\Exception\NoRecipientsException;
@@ -176,6 +177,14 @@ class BPFormHelper
         } elseif ($admin_sender_mode === 0 && !empty($client_email)) {
             $sender = $client_email;
         }
+
+        // Run add
+        $dispatcher = $this->app->getDispatcher();
+        $event      = new StoreMessageEvent(
+            StoreMessageEvent::NAME,
+            ['data' => $data, 'body' => $renderedFormValues, 'params' => $this->params]
+        );
+        $dispatcher->dispatch($event::NAME, $event);
 
         // If we failed to send the message to administrator
         if (!$this->mailStorage->store($renderedFormValues, $subject, $recipients, $reply_to, $sender, $attachments)) {

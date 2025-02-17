@@ -26,6 +26,7 @@ if ($field->type !== 'file') {
             '</li><li>',
             $value
         ) . '</li></ul>' : $value;
+
 // File or files
 } elseif (!empty($value)) {
     $value = '<ul>';
@@ -33,6 +34,8 @@ if ($field->type !== 'file') {
         $value .= '<li>' . $file['name'] . '</li>';
     }
     $value .= '</ul>';
+} else {
+    $value = '';
 }
 
 $title = $field->title;

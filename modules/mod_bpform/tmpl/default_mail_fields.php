@@ -34,6 +34,8 @@ if ($field->type !== 'file') {
         $value .= '<li>' . $file['name'] . '</li>';
     }
     $value .= '</ul>';
+} else {
+    $value = '';
 }
 
 $title = $field->title;
