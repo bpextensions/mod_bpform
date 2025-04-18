@@ -52,7 +52,7 @@ elseif ($field->type === 'html') : ?>
     </td>
 <?php
 else: ?>
-    <th class="col-12"><?php
+    <th style="width:40%"><?php
         echo $title ?></th>
     <td>
         <?php
