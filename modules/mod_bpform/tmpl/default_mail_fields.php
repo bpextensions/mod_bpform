@@ -47,7 +47,8 @@ $title = $field->title;
         <?php echo $value ?>
     </td>
 <?php else: ?>
-    <th class="col-12"><?php echo $title ?></th>
+    <th style="width:40%"><?php
+        echo $title ?></th>
     <td>
         <?php echo $value ?>
     </td>
