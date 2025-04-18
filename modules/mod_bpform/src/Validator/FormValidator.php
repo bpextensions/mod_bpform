@@ -86,24 +86,20 @@ class FormValidator
         // Get types
         $types = $this->getFileTypes($field->mimeaccept);
 
-        // Check file against each type
+        // Check the file against each type
         if (!empty($types)) {
             $result    = false;
             $extension = '.' . strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
             foreach ($types as $type) {
-
-                // It is an extension and its on the list
-                if (strpos($type, '.') === 0 && strtolower($type) === $extension) {
-                    $result = true;
-                    break;
-
+                // It is an extension and it's on the list
+                if (str_starts_with($type, '.') && strtolower($type) === strtolower($extension)) {
+                    return true;
                 }
 
                 // It is a mime
-                if (strpos($type, '/') !== false && fnmatch($type, $file['type'])) {
-                    $result = true;
-                    break;
+                if (str_contains($type, '/') && fnmatch($type, $file['type'])) {
+                    return true;
                 }
             }
         }

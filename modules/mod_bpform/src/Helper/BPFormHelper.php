@@ -143,14 +143,14 @@ class BPFormHelper
         $data = $this->prepareData($input);
 
         // Check if every field that is required was filled
-        if (in_array(false, $data, true)) {
+        if (!$this->isValidInput($data)) {
             return false;
         }
 
         // Collect attachments from validate data
         $attachments = $this->collectAttachments($data);
 
-        // Create inquiry html table
+        // Create inquiry HTML table
         $renderedFormValues = $this->renderFormValues($data);
 
         // Load recipients list from parameters and input
@@ -186,13 +186,13 @@ class BPFormHelper
         );
         $dispatcher->dispatch($event::NAME, $event);
 
-        // If we failed to send the message to administrator
+        // If we failed to send the message to the administrator
         if (!$this->mailStorage->store($renderedFormValues, $subject, $recipients, $reply_to, $sender, $attachments)) {
             $this->app->enqueueMessage(Text::_('MOD_BPFORM_ERROR_EMAIL_CLIENT'), CMSApplicationInterface::MSG_ERROR);
             $result = false;
         }
 
-        // Send a copy email to client if there is an email address in form
+        // Send an email copy to the client if there is an email address in the form
         if ($result && !empty($client_email) && $this->params->get('send_confirmation', true)) {
             $result = $this->notifyClient($renderedFormValues, $visitor_sender_mode, $recipients, $client_email);
         }
@@ -305,34 +305,32 @@ class BPFormHelper
 
         // Process each field
         foreach ($fields as $name => $field) {
-
-            // Default field value is empty
+            // The default field value is empty
             $value = '';
 
             // Prepare and validate file input
-            if (array_key_exists($name, $input) && $field->type === 'file') {
+            if (array_key_exists($name, $input)) {
+                if ($field->type === 'file') {
+                    // Prepare files input format
+                    $files = $this->prepareFiles($input[$name]);
 
-                // Prepare files input format
-                $files = $this->prepareFiles($input[$name]);
+                    // Process and validate each file
+                    $errors = $this->formValidator->validateFiles($files, $field);
 
-                // Process and validate each file
-                $errors = $this->formValidator->validateFiles($files, $field);
+                    // If all files in this field are ok, set them
+                    if (empty($errors)) {
+                        $value = $files;
+                        // There are errors, so display them and invalidate input
+                    } else {
+                        foreach ($errors as $error) {
+                            $this->app->enqueueMessage(Text::sprintf($error, $field->title), 'warning');
+                        }
 
-                // If all files in this field are ok, set them
-                if (empty($errors)) {
-                    $value = $files;
-
-                    // There are errors, so display them and invalidate input
-                } else {
-                    foreach ($errors as $error) {
-                        $this->app->enqueueMessage(Text::sprintf($error, $field->title), 'warning');
+                        $data = array_merge($data, [$name => false]);
                     }
-                    $data = array_merge($data, [$name => false]);
+                } else {
+                    $value = $input[$name];
                 }
-
-                // Prepare regular data value
-            } elseif (array_key_exists($name, $input)) {
-                $value = $input[$name];
             }
 
             // If data is not an invalid file, prepare its data record
@@ -344,23 +342,15 @@ class BPFormHelper
                     'value' => $value,
                 ];
 
-                // This field was set, so map it to data array using field name
+                // This field was set, so map it to a data array using the field name
                 if (array_key_exists($name, $input)) {
                     $data = array_merge($data, [$name => $data_record]);
                 }
 
-                // This is a checkbox so change value
+                // This is a checkbox so change the value
                 if ($field->type === 'checkbox') {
-
-                    // If field was checked, change value to YES
-                    if (array_key_exists($name, $input)) {
-                        $data_record->value = Text::_('JYES');
-
-                        // Field wasn't check, change value to NO
-                    } else {
-                        $data_record->value = Text::_('JNO');
-                    }
-
+                    // If the field was checked, change the value to YES
+                    $data_record->value = array_key_exists($name, $input) ? Text::_('JYES') : Text::_('JNO');
                     $data[$name] = $data_record;
                 } elseif ($field->type === 'group') {
 
@@ -371,9 +361,11 @@ class BPFormHelper
                 }
             }
 
-            // If this field is required and its blank
-            if ($field->required && !in_array($field->type, ['group', 'heading', 'html']) && (!array_key_exists($name,
-                        $input) || empty($input[$name]))) {
+            // If this field is required and it's blank
+            if ($field->required && !in_array($field->type, ['group', 'heading', 'html']) && (!array_key_exists(
+                        $name,
+                        $input
+                    ) || empty($input[$name]))) {
                 $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_S_IS_REQUIRED', $field->title), 'warning');
                 $data[$name] = false;
             }
@@ -383,9 +375,10 @@ class BPFormHelper
             if (!$this->spamValidator->filterText((string)$filterValue)) {
                 $this->app->enqueueMessage(Text::_('MOD_BPFORM_FIELD_CAPTCHA_ERROR'), 'warning');
                 if ($this->user->authorise('core.admin')) {
-                    $this->app->enqueueMessage(Text::sprintf('MOD_BPFORM_FIELD_SPAM_BLACKLIST_ERROR_S', $field->title),
-                        'warning');
-
+                    $this->app->enqueueMessage(
+                        Text::sprintf('MOD_BPFORM_FIELD_SPAM_BLACKLIST_ERROR_S', $field->title),
+                        'warning'
+                    );
                 }
                 $data[$name] = false;
             }
@@ -709,7 +702,6 @@ class BPFormHelper
     {
         $attachments = [];
 
-
         // Collect each attachment
         foreach ($data as $name => $entry) {
             if ($entry->type === 'file' && !empty($entry->value)) {
@@ -894,6 +886,21 @@ class BPFormHelper
     public function getFormValidator(): FormValidator
     {
         return $this->formValidator;
+    }
+
+    public function isValidInput(array $data): bool
+    {
+        foreach ($data as $key => $input) {
+            if ($input === false) {
+                return false;
+            }
+
+            if (is_object($input) && $input->type === 'group' && in_array(false, $input->subfields, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
