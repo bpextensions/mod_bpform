@@ -193,7 +193,7 @@ class BPFormHelper
         }
 
         // Send an email copy to the client if there is an email address in the form
-        if ($result && !empty($client_email) && $this->params->get('send_confirmation', true)) {
+        if ($result && !empty($client_email) && $this->params->get('send_confirmation', false)) {
             $result = $this->notifyClient($renderedFormValues, $visitor_sender_mode, $recipients, $client_email);
         }
 
@@ -225,9 +225,15 @@ class BPFormHelper
     ): bool {
         $intro = $this->params->get('intro');
         $intro = empty(trim(strip_tags($intro))) ? '' : $intro;
-        $body  = $this->prepareBody($intro, $renderedFormValues);
 
-        // Set reply too so user can answer the copy
+        // If there should the data copy in the message
+        if ($this->params->get('send_confirmation_data', false)) {
+            $body = $this->prepareBody($intro, $renderedFormValues);
+        } else {
+            $body = $intro;
+        }
+
+        // Set reply too so the user can answer the copy
         $reply_to = '';
         $sender   = '';
 
