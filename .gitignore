@@ -9,6 +9,10 @@
 !.phpcs/**
 !test
 !test/**
+!plugins
+!plugins/system
+!plugins/system/bpform
+!plugins/system/bpform/**
 
 !/LICENSE
 !/.github
