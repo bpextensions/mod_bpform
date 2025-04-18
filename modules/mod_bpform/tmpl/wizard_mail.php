@@ -23,9 +23,11 @@ defined('_JEXEC') or die;
 
 ?>
 <style type="text/css">
-    .container {
+    .bpform-container {
         width: 100%;
         font-family: Arial, Helvetica, Roboto, SansSerif, serif;
+        margin-top: 1em;
+        margin-bottom: 1em;
     }
 
     .h5 {
@@ -78,7 +80,7 @@ defined('_JEXEC') or die;
     }
 </style>
 
-<div class="container">
+<div class="bpform-container">
 
     <div class="form-data">
         <?php
