@@ -144,7 +144,7 @@
                         hint="MOD_BPFORM_BASIC_FIELD_SUCCESS_MESSAGE_HINT"
                 />
                 <field name="send_confirmation" type="radio"
-                       default="0" showon="type!:html,heading,recipient,group"
+                       default="0"
                        layout="joomla.form.field.radio.switcher"
                        label="MOD_BPFORM_FIELD_SEND_CONFIRMATION_LABEL"
                        description="MOD_BPFORM_FIELD_SEND_CONFIRMATION_DESC"
