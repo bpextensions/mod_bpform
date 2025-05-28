@@ -178,7 +178,7 @@ class BPFormHelper
             $sender = $client_email;
         }
 
-        // Run add
+        // Run adds
         $dispatcher = $this->app->getDispatcher();
         $event      = new StoreMessageEvent(
             StoreMessageEvent::NAME,
@@ -207,7 +207,7 @@ class BPFormHelper
     }
 
     /**
-     * Notify client about receiving the message.
+     * Notify the client about receiving the message.
      *
      * @param   string  $renderedFormValues
      * @param   int     $visitor_sender_mode
