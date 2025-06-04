@@ -14,6 +14,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\WebAsset\WebAssetManager;
 use Joomla\Registry\Registry;
 
@@ -34,6 +35,7 @@ $form = new Form($formPrefix);
 $wa   = Factory::getApplication()->getDocument()->getWebAssetManager();
 $wa->useScript('bootstrap.collapse');
 $groups_count = count($fields);
+$current_uri = Uri::getInstance()->toString();
 ?>
 <div class="modbpform<?php
 echo $moduleclass_sfx ?>">
@@ -44,7 +46,7 @@ echo $moduleclass_sfx ?>">
           method="post"
           data-form-step="1"
           action="<?php
-          echo JUri::current() ?>"
+          echo $current_uri ?>"
           id="<?php
           echo $formPrefix ?>-form"
         <?php

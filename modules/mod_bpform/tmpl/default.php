@@ -13,6 +13,7 @@ use BPExtensions\Module\BPForm\Site\Helper\BPFormHelper;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Registry\Registry;
 
 defined('_JEXEC') or die;
@@ -28,12 +29,15 @@ defined('_JEXEC') or die;
  */
 
 $form = new Form($formPrefix);
-
+$current_uri = Uri::getInstance()->toString();
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 
     <form name="<?php echo $formPrefix ?>" class="form-vertical row" method="post"
-          action="<?php echo JUri::current() ?>"<?php if ($helper->hasFilesUpload()): ?> enctype="multipart/form-data"<?php endif ?>>
+          action="<?php
+          echo $current_uri ?>"<?php
+    if ($helper->hasFilesUpload()): ?> enctype="multipart/form-data"<?php
+    endif ?>>
         <?php foreach ($fields as $entry): ?>
             <?php if ($entry->type === 'group'):
                 $group = &$entry;
