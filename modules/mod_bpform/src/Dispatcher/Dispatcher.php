@@ -101,7 +101,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
 
         try {
             if ($inputMethod === 'POST' && $data['helper']->submit($data['values']) === true) {
-                $data['app']->redirect(Uri::current(), 302);
+                $data['app']->redirect(Uri::getInstance()->toString(), 302);
                 $data['app']->close();
             }
         } catch (Exception $e) {
