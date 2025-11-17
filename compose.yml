@@ -2,7 +2,7 @@ name: bpform
 services:
 
   joomla:
-    image: joomla:5.2-php8.3-apache
+    image: joomla:6
     restart: unless-stopped
     ports:
       - "80:80"
