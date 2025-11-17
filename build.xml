@@ -13,8 +13,10 @@
     </target>
 
     <target name="test:compatibility">
-        <echo msg="Testing PHP 7.4 Compatibility"/>
-        <exec command="composer test:compatibility" checkreturn="true"/>
+        <echo msg="Testing PHP 8.3 Compatibility"/>
+        <exec executable="composer" checkreturn="true">
+            <arg value="test:compatibility"/>
+        </exec>
     </target>
 
     <target name="test:mod_bpform">
@@ -69,13 +71,13 @@
 
     <target name="clean">
         <echo msg="Removing build directory ./.build if exists" />
-        <delete dir="./.build" includeemptydirs="true"/>
+        <delete dir="./.build" includeemptydirs="true" quiet="true"/>
     </target>
     
     <target name="build:clean">
         <echo msg="Creating a clean build." />
-        <phingcall target="clean"></phingcall>
-        <phingcall target="build"></phingcall>
+        <phingcall target="clean"/>
+        <phingcall target="build"/>
     </target>
 
 </project>
