@@ -64,7 +64,8 @@ $current_uri = Uri::getInstance()->toString();
             </button>
             <?php endif ?>
             <button class="btn btn-primary px-5" type="submit">
-                <?php echo Text::_('MOD_BPFORM_BUTTON_SEND_LABEL') ?>
+                <?php
+                echo Text::_($params->get('submit_button_label', 'MOD_BPFORM_BUTTON_SEND_LABEL')) ?>
             </button>
         </div>
     </form>

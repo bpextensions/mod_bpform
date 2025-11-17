@@ -115,7 +115,7 @@ echo $moduleclass_sfx ?>">
             <button class="btn btn-primary ms-3" type="submit" disabled style="display:none" data-form-action="submit">
                 <span class="me-2">
                     <?php
-                    echo Text::_('MOD_BPFORM_BUTTON_SEND_LABEL') ?>
+                    echo Text::_($params->get('submit_button_label', 'MOD_BPFORM_BUTTON_SEND_LABEL')) ?>
                 </span>
                 <i class="icon-envelope icon-fw" aria-hidden="true"></i>
             </button>
