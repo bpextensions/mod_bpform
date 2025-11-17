@@ -1,4 +1,4 @@
-name: PHP 8.1
+name: PHP 8.3
 
 on:
   push:
@@ -10,19 +10,13 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Composer Installation
-        uses: php-actions/composer@v5
+        uses: php-actions/composer@v6
 
-      - name: PHP 7.4+ Compatibility
-        id: php74
-        uses: php-actions/composer@v5
+      - name: PHP 8.3+ Compatibility
+        id: php
+        uses: php-actions/composer@v6
         with:
-          command: "test:compatibility:php74"
-
-      - name: PHP 8.0+ Compatibility
-        id: php80
-        uses: php-actions/composer@v5
-        with:
-          command: "test:compatibility:php80"
+          command: "test:compatibility:php"
