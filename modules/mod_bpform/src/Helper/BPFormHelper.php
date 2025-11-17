@@ -223,8 +223,8 @@ class BPFormHelper
         array $recipients,
         string $client_email
     ): bool {
-        $intro = $this->params->get('intro');
-        $intro = empty(trim(strip_tags($intro))) ? '' : $intro;
+        $intro = $this->params->get('intro', '');
+        $intro = empty(trim(strip_tags($intro))) ? '<p></p>' : $intro;
 
         // If there should the data copy in the message
         if ($this->params->get('send_confirmation_data', false)) {
@@ -238,11 +238,11 @@ class BPFormHelper
         $sender   = '';
 
         // If visitor sender mode is set to reply_to
-        if ((int)$visitor_sender_mode === 1) {
+        if ($visitor_sender_mode === 1) {
             $reply_to = current($recipients);
 
             // if visitor sender mode is set to Sender
-        } elseif ((int)$visitor_sender_mode === 0) {
+        } elseif ($visitor_sender_mode === 0) {
             $sender = current($recipients);
         }
 
