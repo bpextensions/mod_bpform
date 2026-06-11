@@ -33,7 +33,8 @@ $current_uri = Uri::getInstance()->toString();
 ?>
 <div class="modbpform<?php echo $moduleclass_sfx ?>">
 
-    <form name="<?php echo $formPrefix ?>" class="form-vertical row" method="post"
+    <form name="<?php
+    echo $formPrefix ?>" class="form-vertical row g-3" method="post"
           action="<?php
           echo $current_uri ?>"<?php
     if ($helper->hasFilesUpload()): ?> enctype="multipart/form-data"<?php

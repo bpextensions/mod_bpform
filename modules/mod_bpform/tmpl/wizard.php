@@ -42,7 +42,7 @@ echo $moduleclass_sfx ?>">
 
     <form name="<?php
     echo $formPrefix ?>"
-          class="form-vertical row"
+          class="form-vertical row g-3"
           method="post"
           data-form-step="1"
           action="<?php

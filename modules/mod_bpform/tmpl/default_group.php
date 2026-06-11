@@ -26,7 +26,7 @@ defined('_JEXEC') or die;
         <h5 class="card-header">
             <?php echo $group->title ?>
         </h5>
-        <div class="card-body row">
+        <div class="card-body row g-3">
             <?php foreach ($group->subfields as $field): ?>
                 <?php require ModuleHelper::getLayoutPath('mod_bpform', $layout . '_field') ?>
             <?php endforeach ?>

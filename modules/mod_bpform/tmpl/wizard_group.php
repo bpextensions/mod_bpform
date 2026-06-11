@@ -34,7 +34,7 @@ echo $step ?>">
             <?php
             echo $group->title ?>
         </h5>
-        <div class="card-body row">
+        <div class="card-body row g-3">
             <?php
             foreach ($group->subfields as $field): ?>
                 <?php
