@@ -19,10 +19,12 @@ use BPExtensions\Module\BPForm\Site\Storage\MailStorage;
 use BPExtensions\Module\BPForm\Site\Validator\FormValidator;
 use BPExtensions\Module\BPForm\Site\Validator\SpamValidator;
 use Exception;
+use Joomla\Application\ApplicationInterface;
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
+use Joomla\CMS\Form\FormField;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
@@ -48,55 +50,53 @@ class BPFormHelper
      *
      * @var array|null
      */
-    protected $fields;
+    protected ?array $fields = null;
 
     /**
      * Module parameters.
      *
      * @var Registry
      */
-    protected $params;
+    protected Registry $params;
 
     /**
      * Module instance.
-     *
-     * @var
      */
-    protected $module;
+    protected object $module;
 
     /**
      * Form prefix used in name attribute of its fields.
      *
      * @var string
      */
-    protected $formPrefix;
+    protected string $formPrefix = '';
 
     /**
      * Current application instance.
      *
      * @var CMSApplication
      */
-    protected $app;
+    protected ApplicationInterface $app;
 
     /**
-     * @var null|SpamValidator
+     * @var SpamValidator
      */
-    protected $spamValidator;
+    protected SpamValidator $spamValidator;
 
     /**
-     * @var null|FormValidator
+     * @var FormValidator
      */
-    protected $formValidator;
+    protected FormValidator $formValidator;
 
     /**
      * @var null|User
      */
-    protected $user;
+    protected ?User $user = null;
 
     /**
      * @var MailStorage
      */
-    protected $mailStorage;
+    protected MailStorage $mailStorage;
 
     /**
      * @throws Exception
@@ -444,18 +444,22 @@ class BPFormHelper
                 $field->instance = null;
             } elseif ($field->type === 'recipient') {
                 $field->instance = FormHelper::loadFieldType('list');
+            } elseif ($field->type === 'tel') {
+                $field->instance = FormHelper::loadFieldType('telephone');
             } else {
                 $field->instance = FormHelper::loadFieldType($field->type);
             }
 
             // Set form object to silence the Joomla API
-            if ($field->instance !== null) {
+            if ($field->instance instanceof FormField) {
+
                 $field->instance->setForm($form);
 
                 if ($isPosted) {
                     $field->instance->setValue($field->value);
                 }
-
+            } else {
+                throw new \RuntimeException('Field type not supported: ' . $field->type, 500);
             }
 
             // Setup XML field element
