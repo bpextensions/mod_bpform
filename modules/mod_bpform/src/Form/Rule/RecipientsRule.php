@@ -49,5 +49,6 @@ final class RecipientsRule extends FormRule
             return false;
         }
 
+        return true;
     }
 }
