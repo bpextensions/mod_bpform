@@ -126,6 +126,7 @@
                         type="text"
                         label="MOD_BPFORM_SUBMIT_BUTTON_LABEL"
                         description="MOD_BPFORM_SUBMIT_BUTTON_DESC"
+                        hint="MOD_BPFORM_SUBMIT_BUTTON_PLACEHOLDER"
                 />
                 <field name="fields" type="subform" required="true"
                        formsource="modules/mod_bpform/forms/fields.xml"

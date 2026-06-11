@@ -10,7 +10,10 @@
 
 namespace BPExtensions\Module\BPForm\Site\Form\Field;
 
-defined('JPATH_PLATFORM') or die;
+// phpcs:disable PSR1.Files.SideEffects
+\defined('_JEXEC') or die;
+
+// phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
@@ -31,7 +34,7 @@ class BPDonateField extends FormField
      *
      * @var string
      */
-    public const SESSION_VAR_NAME = 'bpextensions_donation';
+    public const string SESSION_VAR_NAME = 'bpextensions_donation';
 
     /**
      * The form field type.
@@ -47,7 +50,7 @@ class BPDonateField extends FormField
      * @var    string
      * @since  1.2.2
      */
-    protected $url;
+    protected string $url;
 
     /**
      * Button text.
@@ -55,7 +58,7 @@ class BPDonateField extends FormField
      * @var    string
      * @since  1.2.2
      */
-    protected $button_text;
+    protected string $button_text;
 
     /**
      * Donate intro text.
@@ -63,7 +66,7 @@ class BPDonateField extends FormField
      * @var    string
      * @since  1.2.2
      */
-    protected $intro_text;
+    protected string $intro_text;
 
     /**
      * Method to attach a JForm object to the field.

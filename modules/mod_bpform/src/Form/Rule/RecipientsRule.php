@@ -34,7 +34,13 @@ final class RecipientsRule extends FormRule
      * @throws  UnexpectedValueException if rule is invalid.
      * @since   1.0
      */
-    public function test(\SimpleXMLElement $element, $value, $group = null, Registry $input = null, Form $form = null)
+    public function test(
+        \SimpleXMLElement $element,
+        $value,
+        $group = null,
+        Registry $input = null,
+        Form $form = null
+    ): bool
     {
 
         // We select emails as recipient but we didnt provided the recipients.

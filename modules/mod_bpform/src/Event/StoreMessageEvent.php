@@ -15,7 +15,7 @@ use Joomla\Registry\Registry;
 
 class StoreMessageEvent extends AbstractImmutableEvent
 {
-    public const NAME = 'bpform.store_message';
+    public const string NAME = 'bpform.store_message';
 
     public function __construct(string $name, array $arguments = [])
     {

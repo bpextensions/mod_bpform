@@ -23,7 +23,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Uri\Uri;
 
 // phpcs:disable PSR1.Files.SideEffects
-\defined('JPATH_PLATFORM') or die;
+\defined('_JEXEC') or die;
 // phpcs:enable PSR1.Files.SideEffects
 
 /**
@@ -35,16 +35,16 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
 {
     use HelperFactoryAwareTrait;
 
-    protected $data = [];
+    protected array $data = [];
 
     /**
      * Returns the layout data.
      *
-     * @return  array|bool
+     * @return  array
      *
      * @throws Exception
      */
-    protected function getLayoutData()
+    protected function getLayoutData(): array
     {
         if (!empty($this->data)) {
             return $this->data;
@@ -66,7 +66,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         // Create helper instance
         $helper = $this->getHelperFactory()->getHelper('BPFormHelper', $helperConfig);
         if (!($helper instanceof BPFormHelper)) {
-            return false;
+            throw new \RuntimeException('Could not create BPFormHelper instance', 500);
         }
 
         $app = $this->getApplication();

@@ -31,45 +31,45 @@ class SpamValidator
      *
      * @var string[]
      */
-    protected $words_blacklist;
+    protected array $words_blacklist;
 
     /**
      * List of IP or IP ranges to be blocked.
      *
      * @var string[]
      */
-    protected $ip_blacklist;
+    protected array $ip_blacklist;
 
     /**
      * The result of anti-spam pass.
      *
      * @var bool
      */
-    protected $spamPassResult = true;
+    protected bool $spamPassResult = true;
 
     /**
      * @var CMSApplication
      */
-    protected $app;
+    protected ApplicationInterface $app;
 
     /**
      * @var Registry
      */
-    protected $params;
+    protected Registry $params;
 
     /**
      * @var null|string
      */
-    protected static $captcha;
+    protected static ?string $captcha;
 
     /**
      * A captcha field input name.
      *
      * @var string
      */
-    public const CAPTCHA_FIELD_NAME = 'captcha';
+    public const string CAPTCHA_FIELD_NAME = 'captcha';
 
-    protected $config;
+    protected array $config;
 
     public function __construct(ApplicationInterface $app, array &$config)
     {

@@ -20,16 +20,16 @@ class FormValidator
 {
 
     /**
-     * @var Registry
+     * @var Registry|null
      */
-    protected $params;
+    protected ?Registry $params;
     /**
      * @var CMSApplication
      *
      */
-    protected $app;
+    protected ApplicationInterface $app;
 
-    protected $config;
+    protected array $config;
 
     public function __construct(ApplicationInterface $app, array &$config)
     {
@@ -46,8 +46,6 @@ class FormValidator
      * @param   object  $field  Field object.
      *
      * @return array
-     *
-     * @since 1.2.0
      */
     public function validateFiles(array $input, object $field): array
     {

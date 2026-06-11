@@ -36,7 +36,13 @@ final class MessageAttachmentsRule extends FormRule
      * @throws  UnexpectedValueException if rule is invalid.
      * @since   1.0
      */
-    public function test(\SimpleXMLElement $element, $value, $group = null, Registry $input = null, Form $form = null)
+    public function test(
+        \SimpleXMLElement $element,
+        $value,
+        $group = null,
+        Registry $input = null,
+        Form $form = null
+    ): bool
     {
 
         $attachments = (array)$input->get('params.message_attachments', []);
