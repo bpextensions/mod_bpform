@@ -29,7 +29,6 @@ use Joomla\CMS\Uri\Uri;
 /**
  * Dispatcher class for a mod_bpform module.
  *
- * @since  1.0.0
  */
 class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareInterface
 {

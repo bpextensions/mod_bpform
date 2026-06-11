@@ -32,7 +32,6 @@ final class RecipientsRule extends FormRule
      * @return  boolean  True if the value is valid, false otherwise.
      *
      * @throws  UnexpectedValueException if rule is invalid.
-     * @since   1.0
      */
     public function test(
         \SimpleXMLElement $element,

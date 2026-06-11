@@ -25,7 +25,6 @@ use Joomla\CMS\Language\Text;
 /**
  * A donate button field.
  *
- * @since  1.2.2
  */
 class BPDonateField extends FormField
 {
@@ -40,7 +39,6 @@ class BPDonateField extends FormField
      * The form field type.
      *
      * @var    string
-     * @since  1.2.2
      */
     public $type = 'BPDonate';
 
@@ -48,7 +46,6 @@ class BPDonateField extends FormField
      * Donate url.
      *
      * @var    string
-     * @since  1.2.2
      */
     protected string $url;
 
@@ -56,7 +53,6 @@ class BPDonateField extends FormField
      * Button text.
      *
      * @var    string
-     * @since  1.2.2
      */
     protected string $button_text;
 
@@ -64,7 +60,6 @@ class BPDonateField extends FormField
      * Donate intro text.
      *
      * @var    string
-     * @since  1.2.2
      */
     protected string $intro_text;
 
@@ -80,7 +75,6 @@ class BPDonateField extends FormField
      * @return  boolean  True on success.
      *
      * @see     FormField::setup()
-     * @since   1.2.2
      */
     public function setup(\SimpleXMLElement $element, $value, $group = null): bool
     {
@@ -101,7 +95,6 @@ class BPDonateField extends FormField
      * @return  string  The field input markup.
      *
      * @throws \Exception
-     * @since   1.2.2
      *
      */
     protected function getInput(): string
@@ -180,7 +173,6 @@ class BPDonateField extends FormField
      *
      * @return  string  The field input markup.
      *
-     * @since   1.2.2
      */
     protected function getLabel(): string
     {
