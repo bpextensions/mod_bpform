@@ -60,7 +60,7 @@ class SpamValidator
     /**
      * @var null|string
      */
-    protected static ?string $captcha;
+    protected static ?string $captcha = null;
 
     /**
      * A captcha field input name.
