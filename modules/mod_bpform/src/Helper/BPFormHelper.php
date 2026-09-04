@@ -458,8 +458,6 @@ class BPFormHelper
                 if ($isPosted) {
                     $field->instance->setValue($field->value);
                 }
-            } else {
-                throw new \RuntimeException('Field type not supported: ' . $field->type, 500);
             }
 
             // Setup XML field element

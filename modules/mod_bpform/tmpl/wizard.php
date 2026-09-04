@@ -123,128 +123,127 @@ echo $moduleclass_sfx ?>">
     </form>
 </div>
 
-<?php
-ob_start(); ?>
+<script>
+    <?php ob_start(); ?>
     jQuery(function () {
-    const $form = $('#<?php
-echo $formPrefix ?>-form');
-    const $next = $form.find('[data-form-action="next"]');
-    const $prev = $form.find('[data-form-action="prev"]');
-    const $submit = $form.find('[data-form-action="submit"]');
-    const $steps = $form.find('[data-form-step]');
-    const $progress = $form.find('progress');
-    const $progress_counter = $form.find('[data-form-action="progress-counter"]');
-    let step = parseInt($form.attr('data-form-step'));
-    let steps_count = $steps.length;
+        const $form = $('#<?php echo $formPrefix ?>-form');
+        const $next = $form.find('[data-form-action="next"]');
+        const $prev = $form.find('[data-form-action="prev"]');
+        const $submit = $form.find('[data-form-action="submit"]');
+        const $steps = $form.find('[data-form-step]');
+        const $progress = $form.find('progress');
+        const $progress_counter = $form.find('[data-form-action="progress-counter"]');
+        let step = parseInt($form.attr('data-form-step'));
+        let steps_count = $steps.length;
 
-    // Basic events
-    $next.click((e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    $form.trigger('modbpform.next')
-    });
-    $prev.click((e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    $form.trigger('modbpform.prev')
-    });
-    $submit.click((e) => {
-    $form.trigger('modbpform.submit')
-    });
+        // Basic events
+        $next.click((e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            $form.trigger('modbpform.next')
+        });
+        $prev.click((e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            $form.trigger('modbpform.prev')
+        });
+        $submit.click((e) => {
+            $form.trigger('modbpform.submit')
+        });
 
-    // Update buttons
-    function showButton($btn) {
-    $btn.show().removeAttr('disabled');
-    }
+        // Update buttons
+        function showButton($btn) {
+            $btn.show().removeAttr('disabled');
+        }
 
-    function hideButton($btn) {
-    $btn.hide().attr('disabled', '');
-    }
+        function hideButton($btn) {
+            $btn.hide().attr('disabled', '');
+        }
 
-    function validateInputs($container) {
-    let result = true;
+        function validateInputs($container) {
+            let result = true;
 
-    $container.find('input,select,textarea').each(function () {
-    if (result && !this.reportValidity()) {
-    result = false;
-    }
-    });
+            $container.find('input,select,textarea').each(function () {
+                if (result && !this.reportValidity()) {
+                    result = false;
+                }
+            });
 
-    return result;
-    }
+            return result;
+        }
 
-    // Step change event
-    $form.on('modbpform.stepChange', function () {
-    const currentProgress = step + ' / ' + steps_count;
-    $progress.val(step).text(currentProgress);
-    $progress_counter.text(currentProgress);
-    });
+        // Step change event
+        $form.on('modbpform.stepChange', function () {
+            const currentProgress = step + ' / ' + steps_count;
+            $progress.val(step).text(currentProgress);
+            $progress_counter.text(currentProgress);
+        });
 
-    // Next step event
-    $form.on('modbpform.next', function (e) {
-
-
-    if (!validateInputs($form.find('[data-form-step="' + step + '"]'))) {
-    e.preventDefault();
-    e.stopPropagation();
-    return;
-    }
-
-    if (step + 1 <= steps_count) {
-    step++;
-
-    $form.attr('data-form-step', step);
-    $steps.hide();
-    $form.find('[data-form-step="' + step + '"]').show();
-
-    if (step > 1) {
-    showButton($prev);
-    }
-
-    if (step === steps_count) {
-    hideButton($next);
-    showButton($submit);
-    }
-
-    $form.trigger('modbpform.stepChange');
-    }
-    });
-
-    // Previous step event
-    $form.on('modbpform.prev', function (e) {
-    if (step - 1 > 0) {
-    step--;
-    $form.attr('data-form-step', step);
-    $steps.hide();
-    $form.find('[data-form-step="' + step + '"]').show();
+        // Next step event
+        $form.on('modbpform.next', function (e) {
 
 
-    if (step < steps_count) {
-    showButton($next);
-    hideButton($submit);
-    }
+            if (!validateInputs($form.find('[data-form-step="' + step + '"]'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
 
-    if (step > 1) {
-    showButton($prev);
-    }
+            if (step + 1 <= steps_count) {
+                step++;
 
-    $form.trigger('modbpform.stepChange');
-    }
-    });
+                $form.attr('data-form-step', step);
+                $steps.hide();
+                $form.find('[data-form-step="' + step + '"]').show();
 
-    // Form submit event
-    $form.on('modbpform.submit', function (e) {
-    if (!validateInputs($form)) {
-    e.stopPropagation();
-    e.preventDefault();
+                if (step > 1) {
+                    showButton($prev);
+                }
 
-    return false;
-    }
-    });
+                if (step === steps_count) {
+                    hideButton($next);
+                    showButton($submit);
+                }
+
+                $form.trigger('modbpform.stepChange');
+            }
+        });
+
+        // Previous step event
+        $form.on('modbpform.prev', function (e) {
+            if (step - 1 > 0) {
+                step--;
+                $form.attr('data-form-step', step);
+                $steps.hide();
+                $form.find('[data-form-step="' + step + '"]').show();
+
+
+                if (step < steps_count) {
+                    showButton($next);
+                    hideButton($submit);
+                }
+
+                if (step > 1) {
+                    showButton($prev);
+                }
+
+                $form.trigger('modbpform.stepChange');
+            }
+        });
+
+        // Form submit event
+        $form.on('modbpform.submit', function (e) {
+            if (!validateInputs($form)) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                return false;
+            }
+        });
 
 
     })
-<?php
-$code = ob_get_clean();
-$wa->addInlineScript($code, [], [], ['jquery']);
-?>
+    <?php $code = ob_get_clean();
+    $wa->addInlineScript($code, [], [], ['jquery']);
+    ?>
+</script>
